@@ -2,23 +2,25 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Login from './pages/login/index.jsx';
-import HomePage from './pages/home/index.jsx';
 import Unauthorized from './pages/unauthorized/index.jsx';
+
 import AdminLayout from './components/AdminLayout.jsx';
 import AdminDashboard from './pages/admin-dashboard/index.jsx';
 import AdminTheses from './pages/admin-theses/index.jsx';
 import AdminPeriods from './pages/admin-periods/index.jsx';
 import AdminLecturers from './pages/admin-lecturers/index.jsx';
 import AdminStudents from './pages/admin-students/index.jsx';
-import SupervisorLayout from './components/SupervisorLayout.jsx';
-import SupervisorDashboard from './pages/supervisor-dashboard/index.jsx';
-import SupervisorTheses from './pages/supervisor-theses/index.jsx';
-import CoordinatorLayout from './components/CoordinatorLayout.jsx';
-import CoordinatorDashboard from './pages/coordinator-dashboard/index.jsx';
-import CoordinatorTheses from './pages/coordinator-theses/index.jsx';
-import ReviewerLayout from './components/ReviewerLayout.jsx';
-import ReviewerDashboard from './pages/reviewer-dashboard/index.jsx';
-import ReviewerTheses from './pages/reviewer-theses/index.jsx';
+
+import LecturerLayout from './components/LecturerLayout.jsx';
+import LecturerTheses from './pages/lecturer-theses/index.jsx';
+import LecturerReviews from './pages/lecturer-reviews/index.jsx';
+
+import ModeratorLayout from './components/ModeratorLayout.jsx';
+import ModeratorTheses from './pages/moderator-theses/index.jsx';
+
+import StudentLayout from './components/StudentLayout.jsx';
+import StudentDashboard from './pages/student-dashboard/index.jsx';
+import StudentTheses from './pages/student-theses/index.jsx';
 
 function App() {
   return (
@@ -28,30 +30,14 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
         
-        {/* Protected Routes */}
-        <Route
-          path="/home"
-          element={
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
-          }
-        />
-        
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
-          }
-        />
+        {/* Redirect root to login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
         
         {/* Admin Routes - Protected with role restriction */}
         <Route
           path="/admin"
           element={
-            <ProtectedRoute allowedRoles={['admin']}>
+            <ProtectedRoute allowedRoles={['ADMIN']}>
               <AdminLayout />
             </ProtectedRoute>
           }
@@ -63,43 +49,44 @@ function App() {
           <Route path="students" element={<AdminStudents />} />
         </Route>
         
-        {/* Supervisor Routes - Protected with role restriction */}
+        {/* Lecturer Routes - Protected with role restriction */}
         <Route
-          path="/supervisor"
+          path="/lecturer"
           element={
-            <ProtectedRoute allowedRoles={['supervisor']}>
-              <SupervisorLayout />
+            <ProtectedRoute allowedRoles={['LECTURER']}>
+              <LecturerLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<SupervisorDashboard />} />
-          <Route path="theses" element={<SupervisorTheses />} />
+          <Route index element={<Navigate to="theses" replace />} />
+          <Route path="theses" element={<LecturerTheses />} />
+          <Route path="reviews" element={<LecturerReviews />} />
         </Route>
         
-        {/* Coordinator Routes - Protected with role restriction */}
+        {/* Moderator Routes - Protected with role restriction */}
         <Route
-          path="/coordinator"
+          path="/moderator"
           element={
-            <ProtectedRoute allowedRoles={['coordinator']}>
-              <CoordinatorLayout />
+            <ProtectedRoute allowedRoles={['MODERATOR']}>
+              <ModeratorLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<CoordinatorDashboard />} />
-          <Route path="theses" element={<CoordinatorTheses />} />
+          <Route index element={<Navigate to="theses" replace />} />
+          <Route path="theses" element={<ModeratorTheses />} />
         </Route>
         
-        {/* Reviewer Routes - Protected with role restriction */}
+        {/* Student Routes - Protected with role restriction */}
         <Route
-          path="/reviewer"
+          path="/student"
           element={
-            <ProtectedRoute allowedRoles={['reviewer']}>
-              <ReviewerLayout />
+            <ProtectedRoute allowedRoles={['STUDENT']}>
+              <StudentLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<ReviewerDashboard />} />
-          <Route path="theses" element={<ReviewerTheses />} />
+          <Route index element={<StudentDashboard />} />
+          <Route path="theses" element={<StudentTheses />} />
         </Route>
         
         {/* Catch all - redirect to home or login */}

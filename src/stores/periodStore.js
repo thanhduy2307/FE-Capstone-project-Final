@@ -7,16 +7,34 @@ const usePeriodStore = create((set, get) => ({
     isLoading: false,
     error: null,
 
-    // Fetch all periods
-    fetchPeriods: async () => {
+    // Fetch all periods by semester
+    fetchPeriods: async (semesterId) => {
+        if (!semesterId) return;
         set({ isLoading: true, error: null });
         try {
-            const data = await periodService.getPeriods();
+            const data = await periodService.getPeriodsBySemester(semesterId);
             set({ periods: data, isLoading: false });
             return data;
         } catch (error) {
             set({
                 error: error.response?.data?.message || 'Failed to fetch periods',
+                isLoading: false
+            });
+            throw error;
+        }
+    },
+
+    // Fetch open periods by semester
+    fetchOpenPeriods: async (semesterId) => {
+        if (!semesterId) return;
+        set({ isLoading: true, error: null });
+        try {
+            const data = await periodService.getOpenPeriods(semesterId);
+            set({ periods: data, isLoading: false });
+            return data;
+        } catch (error) {
+            set({
+                error: error.response?.data?.message || 'Failed to fetch open periods',
                 isLoading: false
             });
             throw error;

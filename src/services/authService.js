@@ -16,16 +16,36 @@ const authService = {
             const response = await axiosInstance.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
 
             // Save tokens to localStorage
-            if (response.data.accessToken) {
-                localStorage.setItem('accessToken', response.data.accessToken);
-            }
-            if (response.data.refreshToken) {
-                localStorage.setItem('refreshToken', response.data.refreshToken);
-            }
-            if (response.data.user) {
-                localStorage.setItem('user', JSON.stringify(response.data.user));
+            // The current test api returns `{ message: "Login successful", user: { ... } }` and optionally token.
+            // If token is in response.data.token, we use it, otherwise use a default mechanism if the backend uses sessions
+            const token = typeof response.data === 'string' ? response.data : response.data.token || response.data.accessToken || response.headers['authorization'];
+
+            if (token) {
+                // Remove 'Bearer ' prefix if present
+                const cleanToken = token.startsWith('Bearer ') ? token.slice(7) : token;
+                localStorage.setItem('accessToken', cleanToken);
             }
 
+            // The API returns the user object in `response.data.user`
+            const user = response.data.user || response.data;
+            if (user && typeof user === 'object' && !user.message) {
+                localStorage.setItem('user', JSON.stringify(user));
+            }
+
+            return { token, ...response.data };
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    /**
+     * Register new user
+     * @param {Object} userData - { email, password, fullName, role }
+     * @returns {Promise} 
+     */
+    async register(userData) {
+        try {
+            const response = await axiosInstance.post(API_ENDPOINTS.AUTH.REGISTER, userData);
             return response.data;
         } catch (error) {
             throw error;
@@ -122,6 +142,76 @@ const authService = {
             }
         }
         return null;
+    },
+
+    /**
+     * Get all users
+     * @returns {Promise} List of users
+     */
+    async getAllUsers() {
+        try {
+            const response = await axiosInstance.get(API_ENDPOINTS.AUTH.USERS);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    /**
+     * Get user by ID
+     * @param {number|string} id 
+     * @returns {Promise} User object
+     */
+    async getUserById(id) {
+        try {
+            const response = await axiosInstance.get(API_ENDPOINTS.AUTH.USER_DETAIL(id));
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    /**
+     * Get users by role
+     * @param {string} role 
+     * @returns {Promise} List of users
+     */
+    async getUsersByRole(role) {
+        try {
+            const response = await axiosInstance.get(API_ENDPOINTS.AUTH.USERS_BY_ROLE(role));
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    /**
+     * Update user role
+     * @param {number|string} id 
+     * @param {string} role 
+     * @returns {Promise}
+     */
+    async updateUserRole(id, role) {
+        try {
+            const response = await axiosInstance.put(API_ENDPOINTS.AUTH.UPDATE_ROLE(id), { role });
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    /**
+     * Delete user
+     * @param {number|string} id 
+     * @returns {Promise}
+     */
+    async deleteUser(id) {
+        try {
+            const response = await axiosInstance.delete(API_ENDPOINTS.AUTH.DELETE_USER(id));
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
     },
 };
 

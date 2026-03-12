@@ -22,7 +22,17 @@ const Login = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      const from = location.state?.from?.pathname || '/home';
+      let from = location.state?.from?.pathname;
+      if (!from || from === '/login' || from === '/') {
+        const userRole = useAuthStore.getState().user?.role;
+        switch (userRole) {
+          case 'ADMIN': from = '/admin'; break;
+          case 'LECTURER': from = '/lecturer'; break;
+          case 'MODERATOR': from = '/moderator'; break;
+          case 'STUDENT': from = '/student'; break;
+          default: from = '/home';
+        }
+      }
       navigate(from, { replace: true });
     }
   }, [isAuthenticated, navigate, location]);
@@ -79,7 +89,18 @@ const Login = () => {
     });
     
     if (result.success) {
-      const from = location.state?.from?.pathname || '/home';
+      let from = location.state?.from?.pathname;
+      if (!from || from === '/login' || from === '/') {
+          // get fresh user from store
+          const userRole = useAuthStore.getState().user?.role;
+          switch (userRole) {
+            case 'ADMIN': from = '/admin'; break;
+            case 'LECTURER': from = '/lecturer'; break;
+            case 'MODERATOR': from = '/moderator'; break;
+            case 'STUDENT': from = '/student'; break;
+            default: from = '/home';
+          }
+      }
       navigate(from, { replace: true });
     }
   };

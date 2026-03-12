@@ -81,62 +81,21 @@ const thesisService = {
     // ========== ADMIN FUNCTIONS ==========
 
     /**
-     * Get approved theses (admin only)
-     * @param {Object} params - Query parameters
-     * @returns {Promise} List of approved theses
-     */
-    async getApprovedTheses(params = {}) {
-        try {
-            const response = await axiosInstance.get('/admin/theses/approved', { params });
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    },
-
-    /**
-     * Approve thesis (admin only)
-     * @param {string} id - Thesis ID
-     * @returns {Promise} Updated thesis
-     */
-    async approveThesis(id) {
-        try {
-            const response = await axiosInstance.patch(`/admin/theses/${id}/approve`);
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    },
-
-    /**
-     * Reject thesis (admin only)
-     * @param {string} id - Thesis ID
-     * @param {string} reason - Rejection reason
-     * @returns {Promise} Updated thesis
-     */
-    async rejectThesis(id, reason) {
-        try {
-            const response = await axiosInstance.patch(`/admin/theses/${id}/reject`, { reason });
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    },
-
-    /**
-     * Send email to supervisor (admin only)
-     * @param {string} thesisId - Thesis ID
-     * @param {Object} emailData - Email content
+     * Get topics by status (e.g. PASS, PENDING, IN_REVIEW)
+     * @param {string} status
      * @returns {Promise}
      */
-    async sendEmailToSupervisor(thesisId, emailData) {
+    async getTopicsByStatus(status) {
         try {
-            const response = await axiosInstance.post(`/admin/theses/${thesisId}/send-email`, emailData);
+            const response = await axiosInstance.get(`/api/topics/status/${status}`);
             return response.data;
         } catch (error) {
             throw error;
         }
     },
+
+    // The previous approveThesis/rejectThesis were placeholders, we now use update API endpoints.
+    // i.e `PUT /api/topics/{id}`
 };
 
 export default thesisService;

@@ -49,6 +49,32 @@ const useAuthStore = create(
             },
 
             /**
+             * Register action
+             * @param {Object} userData - { email, password, fullName, role }
+             */
+            register: async (userData) => {
+                set({ isLoading: true, error: null });
+
+                try {
+                    const data = await authService.register(userData);
+
+                    set({
+                        isLoading: false,
+                        error: null,
+                    });
+
+                    return { success: true, data };
+                } catch (error) {
+                    set({
+                        isLoading: false,
+                        error: error.message || 'Registration failed',
+                    });
+
+                    return { success: false, error: error.message };
+                }
+            },
+
+            /**
              * Logout action
              */
             logout: async () => {

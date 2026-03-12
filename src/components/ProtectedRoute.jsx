@@ -14,16 +14,10 @@ const ProtectedRoute = ({ children, allowedRoles = null }) => {
   const location = useLocation();
   const { isAuthenticated, user, checkAuth } = useAuthStore();
 
-  // TEMPORARILY DISABLED - Causing infinite loop
-  // useEffect(() => {
-  //   // Check authentication status on mount
-  //   checkAuth();
-  // }, []); // Empty dependency array - only run once on mount
-
+  // Remove checkAuth from here to prevent infinite loop on re-renders and redirects
+  // checkAuth should ideally be called once at the App root level or top-level layout
 
   // ========== TEMPORARILY DISABLED FOR TESTING ==========
-  // TODO: Uncomment these lines when ready to enable authentication
-  
   // If not authenticated, redirect to login
   // if (!isAuthenticated) {
   //   return <Navigate to="/login" state={{ from: location }} replace />;
@@ -33,7 +27,11 @@ const ProtectedRoute = ({ children, allowedRoles = null }) => {
   // if (allowedRoles && allowedRoles.length > 0) {
   //   const userRole = user?.role;
   //   
-  //   if (!userRole || !allowedRoles.includes(userRole)) {
+  //   // Normalize to uppercase for safety
+  //   const uppercaseAllowedRoles = allowedRoles.map(r => String(r).toUpperCase());
+  //   const uppercaseUserRole = userRole ? String(userRole).toUpperCase() : '';
+
+  //   if (!uppercaseUserRole || !uppercaseAllowedRoles.includes(uppercaseUserRole)) {
   //     return <Navigate to="/unauthorized" replace />;
   //   }
   // }

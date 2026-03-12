@@ -6,13 +6,20 @@ import Button from '../../components/Button.jsx';
 import Card from '../../components/Card.jsx';
 import Input from '../../components/Input.jsx';
 import usePeriodStore from '../../stores/periodStore.js';
+import useSemesterStore from '../../stores/semesterStore.js';
 import './admin-periods.css';
 
 const AdminPeriods = () => {
   const { periods, isLoading, fetchPeriods, createPeriod, updatePeriod, deletePeriod, openPeriod, closePeriod } = usePeriodStore();
+  const { semesters, activeSemester, fetchSemesters, fetchActiveSemester, createSemester, activateSemester } = useSemesterStore();
+  
   const [selectedPeriods, setSelectedPeriods] = useState([]);
+  const [selectedSemesterId, setSelectedSemesterId] = useState(null);
+  
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isCreateSemesterModalOpen, setIsCreateSemesterModalOpen] = useState(false);
+  
   const [currentPeriod, setCurrentPeriod] = useState(null);
   const [formData, setFormData] = useState({
     name: '',

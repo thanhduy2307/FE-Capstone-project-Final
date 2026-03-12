@@ -1,15 +1,15 @@
 // API Configuration
 const API_CONFIG = {
   development: {
-    baseURL: 'http://localhost:3000/api',
+    baseURL: 'https://capstone-project-registration-tool.onrender.com',
     timeout: 10000,
   },
   staging: {
-    baseURL: 'https://staging-api.example.com/api',
+    baseURL: 'https://capstone-project-registration-tool.onrender.com',
     timeout: 10000,
   },
   production: {
-    baseURL: 'https://api.example.com/api',
+    baseURL: 'https://capstone-project-registration-tool.onrender.com',
     timeout: 10000,
   },
 };
@@ -24,21 +24,35 @@ export const apiConfig = API_CONFIG[ENV];
 export const API_ENDPOINTS = {
   // Auth endpoints
   AUTH: {
-    LOGIN: '/auth/login',
-    LOGOUT: '/auth/logout',
-    REFRESH_TOKEN: '/auth/refresh',
-    CURRENT_USER: '/auth/me',
+    LOGIN: '/api/auth/login',
+    REGISTER: '/api/auth/register',
+    CURRENT_USER: '/api/auth/me', // If it exists, otherwise we decode token
+    USERS: '/api/auth/users',
+    USER_DETAIL: (id) => `/api/auth/users/${id}`,
+    USERS_BY_ROLE: (role) => `/api/auth/users/role/${role}`,
+    UPDATE_ROLE: (id) => `/api/auth/users/${id}/role`,
+    DELETE_USER: (id) => `/api/auth/users/${id}`,
   },
-  
-  // Thesis endpoints
+
+  // Topic endpoints
   THESIS: {
-    LIST: '/theses',
-    CREATE: '/theses',
-    DETAIL: (id) => `/theses/${id}`,
-    UPDATE: (id) => `/theses/${id}`,
-    DELETE: (id) => `/theses/${id}`,
+    LIST: '/api/topics',
+    CREATE: '/api/topics',
+    DETAIL: (id) => `/api/topics/${id}`,
+    UPDATE: (id) => `/api/topics/${id}`,
+    DELETE: (id) => `/api/topics/${id}`,
   },
-  
+
+  // Registration Phase endpoints
+  PHASES: {
+    LIST: '/api/registration-phases',
+  },
+
+  // Semester endpoints
+  SEMESTER: {
+    LIST: '/api/semesters',
+  },
+
   // User endpoints (for future use)
   USERS: {
     LIST: '/users',

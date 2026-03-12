@@ -3,147 +3,90 @@ import { Link } from 'react-router-dom';
 import Card from '../../components/Card.jsx';
 import Badge from '../../components/Badge.jsx';
 import Button from '../../components/Button.jsx';
+import Modal from '../../components/Modal.jsx';
+import Input from '../../components/Input.jsx';
 import useAuthStore from '../../stores/authStore.js';
+import useSemesterStore from '../../stores/semesterStore.js';
+import usePeriodStore from '../../stores/periodStore.js';
 import './admin-dashboard.css';
 
 const AdminDashboard = () => {
   const { user } = useAuthStore();
+  const { semesters, activeSemester, fetchSemesters, fetchActiveSemester, createSemester, activateSemester } = useSemesterStore();
+  const { periods, fetchPeriods, createPeriod } = usePeriodStore();
 
-  // Mock data - replace with real API calls
-  const stats = [
-    {
-      id: 1,
-      title: 'Tổng Đề Tài',
-      value: '156',
-      change: '+12',
-      changePercent: '+8.5%',
-      trend: 'up',
-      icon: '📚',
-      color: 'blue',
-    },
-    {
-      id: 2,
-      title: 'Đang Chờ Duyệt',
-      value: '23',
-      change: '+5',
-      changePercent: '+27.8%',
-      trend: 'up',
-      icon: '⏳',
-      color: 'yellow',
-    },
-    {
-      id: 3,
-      title: 'Đã Phê Duyệt',
-      value: '118',
-      change: '+8',
-      changePercent: '+7.3%',
-      trend: 'up',
-      icon: '✅',
-      color: 'green',
-    },
-    {
-      id: 4,
-      title: 'Bị Từ Chối',
-      value: '15',
-      change: '-2',
-      changePercent: '-11.8%',
-      trend: 'down',
-      icon: '❌',
-      color: 'red',
-    },
-  ];
+  const [isLoading, setIsLoading] = useState(true);
 
-  const recentTheses = [
-    {
-      id: 1,
-      title: 'Ứng dụng Machine Learning trong phân tích dữ liệu',
-      studentName: 'Nguyễn Văn A',
-      studentCode: 'SV001',
-      supervisorName: 'TS. Trần Thị B',
-      submittedDate: '2024-01-30',
-      status: 'pending',
-    },
-    {
-      id: 2,
-      title: 'Xây dựng hệ thống quản lý bằng Blockchain',
-      studentName: 'Lê Thị C',
-      studentCode: 'SV002',
-      supervisorName: 'PGS.TS. Phạm Văn D',
-      submittedDate: '2024-01-29',
-      status: 'approved',
-    },
-    {
-      id: 3,
-      title: 'Phát triển ứng dụng IoT cho Smart Home',
-      studentName: 'Hoàng Văn E',
-      studentCode: 'SV003',
-      supervisorName: 'TS. Võ Thị F',
-      submittedDate: '2024-01-28',
-      status: 'approved',
-    },
-    {
-      id: 4,
-      title: 'Nghiên cứu thuật toán tối ưu hóa',
-      studentName: 'Trần Thị G',
-      studentCode: 'SV004',
-      supervisorName: 'TS. Nguyễn Văn H',
-      submittedDate: '2024-01-27',
-      status: 'rejected',
-    },
-  ];
+  // Semester Modal
+  const [isSemesterModalOpen, setIsSemesterModalOpen] = useState(false);
+  const [semesterForm, setSemesterForm] = useState({ code: '', name: '', startDate: '', endDate: '' });
 
-  const periodStats = [
-    {
-      id: 1,
-      name: 'Học kỳ 1 - 2023/2024',
-      status: 'closed',
-      totalTheses: 145,
-      approved: 132,
-      pending: 0,
-      rejected: 13,
-    },
-    {
-      id: 2,
-      name: 'Học kỳ 2 - 2023/2024',
-      status: 'open',
-      totalTheses: 156,
-      approved: 118,
-      pending: 23,
-      rejected: 15,
-    },
-  ];
+  // Period Modal
+  const [isPeriodModalOpen, setIsPeriodModalOpen] = useState(false);
+  const [periodForm, setPeriodForm] = useState({ name: '', startDate: '', endDate: '' });
 
-  const getStatusVariant = (status) => {
-    switch (status) {
-      case 'approved':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'rejected':
-        return 'error';
-      case 'open':
-        return 'success';
-      case 'closed':
-        return 'error';
-      default:
-        return 'default';
+  // Mock data for accounts summary
+  const accountStats = {
+    totalLecturers: 24,
+    totalStudents: 580,
+    activeLecturers: 22,
+    activeStudents: 565,
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    try {
+      await fetchSemesters();
+      const active = await fetchActiveSemester();
+      if (active) {
+        await fetchPeriods(active.id);
+      }
+    } catch (err) {
+      console.error('Failed to load data:', err);
+    }
+    setIsLoading(false);
+  };
+
+  const handleCreateSemester = async () => {
+    try {
+      await createSemester(semesterForm);
+      setIsSemesterModalOpen(false);
+      setSemesterForm({ code: '', name: '', startDate: '', endDate: '' });
+      await fetchSemesters();
+    } catch (err) {
+      console.error('Failed to create semester:', err);
+      alert('Tạo học kỳ thất bại!');
     }
   };
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'approved':
-        return 'Đã duyệt';
-      case 'pending':
-        return 'Chờ duyệt';
-      case 'rejected':
-        return 'Từ chối';
-      case 'open':
-        return 'Đang mở';
-      case 'closed':
-        return 'Đã đóng';
-      default:
-        return status;
+  const handleActivateSemester = async (id) => {
+    if (window.confirm('Bạn có chắc muốn kích hoạt học kỳ này? Học kỳ hiện tại sẽ bị vô hiệu hóa.')) {
+      try {
+        await activateSemester(id);
+        await loadData();
+      } catch (err) {
+        console.error('Failed to activate semester:', err);
+      }
+    }
+  };
+
+  const handleCreatePeriod = async () => {
+    if (!activeSemester) {
+      alert('Vui lòng kích hoạt một Học kỳ trước!');
+      return;
+    }
+    try {
+      await createPeriod({ ...periodForm, semesterId: activeSemester.id });
+      setIsPeriodModalOpen(false);
+      setPeriodForm({ name: '', startDate: '', endDate: '' });
+      await fetchPeriods(activeSemester.id);
+    } catch (err) {
+      console.error('Failed to create period:', err);
+      alert('Tạo đợt đăng ký thất bại!');
     }
   };
 
@@ -151,161 +94,304 @@ const AdminDashboard = () => {
     <div className="admin-dashboard">
       <div className="dashboard-header">
         <div>
-          <h1>Dashboard Quản Lý Đề Tài</h1>
+          <h1>Bảng điều khiển Quản trị viên</h1>
           <p className="dashboard-subtitle">
-            Tổng quan hệ thống quản lý đề tài tốt nghiệp
+            Chuẩn bị Học kỳ, Thiết lập Timeline, và Quản lý Tài khoản
           </p>
-        </div>
-        <div className="header-actions">
-          <Link to="/admin/theses">
-            <Button variant="primary" size="md">
-              Quản lý đề tài
-            </Button>
-          </Link>
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="stats-grid">
-        {stats.map((stat) => (
-          <Card key={stat.id} className="stat-card">
-            <div className="stat-header">
-              <div className="stat-icon">{stat.icon}</div>
-              <div className="stat-info">
-                <p className="stat-label">{stat.title}</p>
-                <h2 className="stat-value">{stat.value}</h2>
-                <div className="stat-change">
-                  <span className={`change-badge ${stat.trend}`}>
-                    {stat.trend === 'up' ? '↑' : '↓'} {stat.changePercent}
-                  </span>
-                  <span className="change-text">
-                    {stat.change} so với tháng trước
-                  </span>
+      {/* ========== STEP 1: Semester Management ========== */}
+      <div className="workflow-step">
+        <div className="step-indicator">
+          <span className="step-number">1</span>
+          <div className="step-line"></div>
+        </div>
+        <div className="step-content">
+          <Card className="step-card">
+            <div className="step-card-header">
+              <div>
+                <h2 className="step-title">📅 Quản lý Học kỳ</h2>
+                <p className="step-description">Tạo và kích hoạt Học kỳ mới. Chỉ có thể kích hoạt 1 học kỳ tại một thời điểm.</p>
+              </div>
+              <Button variant="primary" size="md" onClick={() => setIsSemesterModalOpen(true)}>
+                + Tạo Học kỳ mới
+              </Button>
+            </div>
+
+            {/* Active Semester highlight */}
+            {activeSemester && (
+              <div className="active-semester-banner">
+                <div className="banner-info">
+                  <span className="banner-label">Học kỳ đang hoạt động:</span>
+                  <strong>{activeSemester.name}</strong>
+                  <span className="banner-code">({activeSemester.code})</span>
                 </div>
+                <Badge variant="success">ACTIVE</Badge>
+              </div>
+            )}
+
+            {/* Semester list */}
+            <div className="semester-list">
+              {isLoading ? (
+                <p style={{ color: 'var(--text-secondary)', padding: '10px 0' }}>Đang tải...</p>
+              ) : semesters && semesters.length > 0 ? (
+                <table className="dashboard-table">
+                  <thead>
+                    <tr>
+                      <th>Mã</th>
+                      <th>Tên Học kỳ</th>
+                      <th>Ngày bắt đầu</th>
+                      <th>Ngày kết thúc</th>
+                      <th>Trạng thái</th>
+                      <th>Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {semesters.map(sem => (
+                      <tr key={sem.id}>
+                        <td><span className="student-code">{sem.code}</span></td>
+                        <td>{sem.name}</td>
+                        <td>{new Date(sem.startDate).toLocaleDateString('vi-VN')}</td>
+                        <td>{new Date(sem.endDate).toLocaleDateString('vi-VN')}</td>
+                        <td>
+                          <Badge variant={sem.isActive ? 'success' : 'default'}>
+                            {sem.isActive ? 'ACTIVE' : 'Inactive'}
+                          </Badge>
+                        </td>
+                        <td>
+                          {!sem.isActive && (
+                            <Button size="sm" variant="outline" onClick={() => handleActivateSemester(sem.id)}>
+                              Kích hoạt
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="empty-state">
+                  <p>Chưa có học kỳ nào. Hãy tạo Học kỳ đầu tiên!</p>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* ========== STEP 2: Timeline / Registration Phases ========== */}
+      <div className="workflow-step">
+        <div className="step-indicator">
+          <span className="step-number">2</span>
+          <div className="step-line"></div>
+        </div>
+        <div className="step-content">
+          <Card className="step-card">
+            <div className="step-card-header">
+              <div>
+                <h2 className="step-title">⏰ Thiết lập Đợt Đăng ký (Timeline)</h2>
+                <p className="step-description">
+                  Cấu hình các đợt nộp đề tài / đăng ký cho học kỳ đang hoạt động.
+                  {!activeSemester && <span style={{ color: '#f59e0b' }}> (Vui lòng kích hoạt Học kỳ ở Bước 1 trước)</span>}
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <Button variant="primary" size="md" onClick={() => setIsPeriodModalOpen(true)} disabled={!activeSemester}>
+                  + Tạo Đợt mới
+                </Button>
+                <Link to="/admin/periods">
+                  <Button variant="outline" size="md">
+                    Quản lý chi tiết
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {activeSemester ? (
+              <div className="period-list-dashboard">
+                {periods && periods.length > 0 ? (
+                  <table className="dashboard-table">
+                    <thead>
+                      <tr>
+                        <th>Tên Đợt</th>
+                        <th>Ngày bắt đầu</th>
+                        <th>Ngày kết thúc</th>
+                        <th>Trạng thái</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {periods.map(period => (
+                        <tr key={period.id}>
+                          <td><strong>{period.name}</strong></td>
+                          <td>{new Date(period.startDate).toLocaleDateString('vi-VN')}</td>
+                          <td>{new Date(period.endDate).toLocaleDateString('vi-VN')}</td>
+                          <td>
+                            <Badge variant={period.isOpen ? 'success' : 'error'}>
+                              {period.isOpen ? 'OPEN' : 'CLOSED'}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="empty-state">
+                    <p>Chưa có đợt đăng ký nào cho học kỳ hiện tại. Hãy tạo đợt đầu tiên!</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <p>Kích hoạt một Học kỳ ở Bước 1 để bắt đầu thiết lập Timeline.</p>
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
+
+      {/* ========== STEP 3: Account Management ========== */}
+      <div className="workflow-step">
+        <div className="step-indicator">
+          <span className="step-number">3</span>
+        </div>
+        <div className="step-content">
+          <Card className="step-card">
+            <div className="step-card-header">
+              <div>
+                <h2 className="step-title">👥 Quản lý Tài khoản</h2>
+                <p className="step-description">Đảm bảo danh sách Giảng viên và Sinh viên đã được import đầy đủ vào hệ thống.</p>
+              </div>
+            </div>
+
+            <div className="account-stats-grid">
+              <div className="account-stat-card">
+                <div className="account-stat-icon lecturer-icon">🎓</div>
+                <div className="account-stat-info">
+                  <div className="account-stat-value">{accountStats.totalLecturers}</div>
+                  <div className="account-stat-label">Giảng viên</div>
+                  <div className="account-stat-sub">{accountStats.activeLecturers} đang hoạt động</div>
+                </div>
+                <Link to="/admin/lecturers">
+                  <Button variant="outline" size="sm">Quản lý →</Button>
+                </Link>
+              </div>
+
+              <div className="account-stat-card">
+                <div className="account-stat-icon student-icon">📖</div>
+                <div className="account-stat-info">
+                  <div className="account-stat-value">{accountStats.totalStudents}</div>
+                  <div className="account-stat-label">Sinh viên</div>
+                  <div className="account-stat-sub">{accountStats.activeStudents} đang hoạt động</div>
+                </div>
+                <Link to="/admin/students">
+                  <Button variant="outline" size="sm">Quản lý →</Button>
+                </Link>
               </div>
             </div>
           </Card>
-        ))}
+        </div>
       </div>
 
-      {/* Recent Theses Table */}
-      <div className="dashboard-section">
-        <Card>
-          <div className="section-header">
-            <h3>Đề Tài Mới Nhất</h3>
-            <Link to="/admin/theses" className="view-all-link">
-              Xem tất cả →
-            </Link>
-          </div>
-          <div className="table-wrapper">
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th>Mã SV</th>
-                  <th>Tên Đề Tài</th>
-                  <th>Sinh Viên</th>
-                  <th>Giảng Viên HD</th>
-                  <th>Ngày Nộp</th>
-                  <th>Trạng Thái</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTheses.map((thesis) => (
-                  <tr key={thesis.id}>
-                    <td>
-                      <span className="student-code">{thesis.studentCode}</span>
-                    </td>
-                    <td>
-                      <div className="thesis-title">{thesis.title}</div>
-                    </td>
-                    <td>{thesis.studentName}</td>
-                    <td>{thesis.supervisorName}</td>
-                    <td>{thesis.submittedDate}</td>
-                    <td>
-                      <Badge variant={getStatusVariant(thesis.status)}>
-                        {getStatusText(thesis.status)}
-                      </Badge>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </div>
+      {/* ========== MODALS ========== */}
 
-      {/* Period Statistics */}
-      <div className="dashboard-grid">
-        <Card className="period-card">
-          <h3>Thống Kê Đợt Nộp</h3>
-          <div className="period-list">
-            {periodStats.map((period) => (
-              <div key={period.id} className="period-item">
-                <div className="period-header">
-                  <span className="period-name">{period.name}</span>
-                  <Badge variant={getStatusVariant(period.status)}>
-                    {getStatusText(period.status)}
-                  </Badge>
-                </div>
-                <div className="period-stats">
-                  <div className="period-stat">
-                    <span className="stat-number">{period.totalTheses}</span>
-                    <span className="stat-text">Tổng đề tài</span>
-                  </div>
-                  <div className="period-stat success">
-                    <span className="stat-number">{period.approved}</span>
-                    <span className="stat-text">Đã duyệt</span>
-                  </div>
-                  <div className="period-stat warning">
-                    <span className="stat-number">{period.pending}</span>
-                    <span className="stat-text">Chờ duyệt</span>
-                  </div>
-                  <div className="period-stat error">
-                    <span className="stat-number">{period.rejected}</span>
-                    <span className="stat-text">Từ chối</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+      {/* Create Semester Modal */}
+      <Modal
+        isOpen={isSemesterModalOpen}
+        onClose={() => setIsSemesterModalOpen(false)}
+        title="Tạo Học kỳ mới"
+        size="md"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsSemesterModalOpen(false)}>Hủy</Button>
+            <Button variant="primary" onClick={handleCreateSemester}>Tạo Học kỳ</Button>
+          </>
+        }
+      >
+        <div className="modal-form">
+          <div className="form-row">
+            <div className="form-group">
+              <label>Mã Học kỳ:</label>
+              <Input
+                value={semesterForm.code}
+                onChange={e => setSemesterForm({ ...semesterForm, code: e.target.value })}
+                placeholder="VD: SP26"
+              />
+            </div>
+            <div className="form-group">
+              <label>Tên Học kỳ:</label>
+              <Input
+                value={semesterForm.name}
+                onChange={e => setSemesterForm({ ...semesterForm, name: e.target.value })}
+                placeholder="VD: Spring 2026"
+              />
+            </div>
           </div>
-          <Link to="/admin/periods">
-            <Button variant="outline" size="md" className="full-width-btn">
-              Quản lý đợt nộp
-            </Button>
-          </Link>
-        </Card>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Ngày bắt đầu:</label>
+              <Input
+                type="date"
+                value={semesterForm.startDate}
+                onChange={e => setSemesterForm({ ...semesterForm, startDate: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>Ngày kết thúc:</label>
+              <Input
+                type="date"
+                value={semesterForm.endDate}
+                onChange={e => setSemesterForm({ ...semesterForm, endDate: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+      </Modal>
 
-        <Card className="quick-actions-card">
-          <h3>Thao Tác Nhanh</h3>
-          <div className="quick-actions">
-            <Link to="/admin/theses">
-              <button className="quick-action-btn">
-                <span className="action-icon">📝</span>
-                <span className="action-text">Duyệt đề tài</span>
-              </button>
-            </Link>
-            <Link to="/admin/periods">
-              <button className="quick-action-btn">
-                <span className="action-icon">📅</span>
-                <span className="action-text">Tạo đợt nộp mới</span>
-              </button>
-            </Link>
-            <Link to="/admin/theses">
-              <button className="quick-action-btn">
-                <span className="action-icon">📧</span>
-                <span className="action-text">Gửi email GV</span>
-              </button>
-            </Link>
-            <button className="quick-action-btn">
-              <span className="action-icon">📊</span>
-              <span className="action-text">Xuất báo cáo</span>
-            </button>
+      {/* Create Period Modal */}
+      <Modal
+        isOpen={isPeriodModalOpen}
+        onClose={() => setIsPeriodModalOpen(false)}
+        title={`Tạo Đợt đăng ký mới (${activeSemester?.name || ''})`}
+        size="md"
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setIsPeriodModalOpen(false)}>Hủy</Button>
+            <Button variant="primary" onClick={handleCreatePeriod}>Tạo Đợt</Button>
+          </>
+        }
+      >
+        <div className="modal-form">
+          <div className="form-group">
+            <label>Tên đợt đăng ký:</label>
+            <Input
+              value={periodForm.name}
+              onChange={e => setPeriodForm({ ...periodForm, name: e.target.value })}
+              placeholder="VD: Đợt 1 - Nộp đề tài Sinh viên"
+            />
           </div>
-        </Card>
-      </div>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Ngày bắt đầu:</label>
+              <Input
+                type="datetime-local"
+                value={periodForm.startDate}
+                onChange={e => setPeriodForm({ ...periodForm, startDate: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>Ngày kết thúc:</label>
+              <Input
+                type="datetime-local"
+                value={periodForm.endDate}
+                onChange={e => setPeriodForm({ ...periodForm, endDate: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
 
 export default AdminDashboard;
-
