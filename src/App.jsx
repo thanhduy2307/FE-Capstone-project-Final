@@ -22,6 +22,7 @@ import ModeratorTheses from './pages/moderator-theses/index.jsx';
 import StudentLayout from './components/StudentLayout.jsx';
 import StudentDashboard from './pages/student-dashboard/index.jsx';
 import StudentTheses from './pages/student-theses/index.jsx';
+import StudentMyThesis from './pages/student-my-thesis/index.jsx';
 
 function App() {
   return (
@@ -89,6 +90,7 @@ function App() {
         >
           <Route index element={<StudentDashboard />} />
           <Route path="theses" element={<StudentTheses />} />
+          <Route path="my-thesis" element={<StudentMyThesis />} />
         </Route>
         
         {/* Catch all - redirect to home or login */}
