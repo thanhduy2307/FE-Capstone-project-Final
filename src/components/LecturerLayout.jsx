@@ -43,6 +43,13 @@ const LecturerLayout = () => {
             </svg>
             Phản Biện (Reviewer)
           </Link>
+          <Link to="/lecturer/history" className="nav-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            Lịch Sử Đánh Giá (History)
+          </Link>
         </div>
 
         <div className="navbar-user">

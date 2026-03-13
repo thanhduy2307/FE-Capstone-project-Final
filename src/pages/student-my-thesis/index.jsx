@@ -24,6 +24,23 @@ const StudentMyThesis = () => {
   const loadMyThesis = async () => {
     setIsLoading(true);
     try {
+      // --- Primary strategy: use saved topicId directly ---
+      const savedTopicId = localStorage.getItem('myTopicId');
+      if (savedTopicId) {
+        try {
+          const topic = await thesisService.getThesisById(savedTopicId);
+          if (topic && topic.id) {
+            setThesisDetail(topic);
+            setIsLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.warn('Could not fetch topic by saved ID, falling back...', e);
+          localStorage.removeItem('myTopicId');
+        }
+      }
+
+      // --- Fallback: scan semester topics to find by studentGroupInfo ---
       let activeInfo = activeSemester;
       if (!activeInfo) {
         activeInfo = await fetchActiveSemester();
@@ -45,11 +62,14 @@ const StudentMyThesis = () => {
                     );
                     if (isMember) {
                         userThesis = t;
+                        // Save for future fast lookups
+                        localStorage.setItem('myTopicId', t.id);
                         break;
                     }
                 } catch (e) {
                     if (t.studentGroupInfo.includes(user?.username) || t.studentGroupInfo.includes(user?.email)) {
                         userThesis = t;
+                        localStorage.setItem('myTopicId', t.id);
                         break;
                     }
                 }

@@ -1,208 +1,200 @@
 .lecturer-reviews {
-    width: 100%;
+  padding: 0;
 }
 
 .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: var(--spacing-2xl);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
 }
 
 .page-header h1 {
-    font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--text-primary);
-    margin: 0 0 var(--spacing-sm) 0;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 4px;
 }
 
 .page-subtitle {
-    color: var(--text-tertiary);
-    font-size: var(--font-size-sm);
-    margin: 0;
+  color: #888;
+  font-size: 14px;
+  margin: 0;
 }
 
-/* Matrix Table Styling */
-.matrix-table-container {
-    overflow-x: auto;
-    width: 100%;
-    margin-top: 10px;
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: #888;
 }
 
-.matrix-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 900px;
+.empty-state h3 {
+  font-size: 18px;
+  margin: 0 0 8px;
 }
 
-.matrix-table th,
-.matrix-table td {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 12px;
-    vertical-align: top;
-    color: var(--text-primary);
+.empty-state p { font-size: 14px; margin: 0; }
+
+/* Review card list */
+.review-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.matrix-table thead th {
-    background: rgba(0, 0, 0, 0.4);
-    font-weight: bold;
-    color: var(--text-secondary);
-    text-align: center;
-    position: sticky;
-    top: 0;
-    z-index: 2;
+.review-card {
+  padding: 24px !important;
 }
 
-.matrix-table tbody tr:hover td {
-    background: rgba(255, 255, 255, 0.02);
+.review-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
 }
 
-.col-no {
-    width: 40px;
-    text-align: center;
+.topic-code {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6c5ce7;
+  background: rgba(108, 92, 231, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 8px;
 }
 
-.col-question {
-    width: 350px;
-    text-align: left !important;
+.topic-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  line-height: 1.3;
 }
 
-.col-thesis {
-    min-width: 250px;
+.topic-dept {
+  font-size: 13px;
+  color: #888;
+  margin: 0;
 }
 
-.thesis-header-code {
-    font-size: 14px;
-    color: var(--primary-color, #a855f7);
-    margin-bottom: 4px;
+.topic-desc {
+  font-size: 13px;
+  color: #aaa;
+  margin: 0 0 20px;
+  line-height: 1.6;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  border-left: 3px solid rgba(108,92,231,0.4);
 }
 
-.thesis-header-title {
-    font-size: 13px;
-    color: var(--text-tertiary);
-    font-weight: normal;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+.reviewer-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
-.question-name {
-    font-weight: 600;
-    margin-bottom: 6px;
-    font-size: 14px;
+.reviewer-badge.r1 { background: rgba(108,92,231,0.15); color: #6c5ce7; }
+.reviewer-badge.r2 { background: rgba(0,184,148,0.15); color: #00b894; }
+.reviewer-badge.r3 { background: rgba(225,112,85,0.15); color: #e17055; }
+
+/* Eval Form */
+.eval-form {
+  border-top: 1px solid rgba(255,255,255,0.07);
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.question-desc {
-    font-size: 13px;
-    color: var(--text-tertiary);
-    line-height: 1.4;
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-/* Matrix Scoring Options */
-.matrix-scoring-options {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ccc;
+  letter-spacing: 0.03em;
 }
 
-.matrix-score-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(0, 0, 0, 0.2);
-    color: var(--text-secondary);
-    font-weight: bold;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
+.required {
+  color: #e17055;
 }
 
-.matrix-score-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+/* Decision buttons */
+.decision-btns {
+  display: flex;
+  gap: 10px;
 }
 
-.matrix-score-btn.pass.selected {
-    background: #22c55e;
-    border-color: #22c55e;
-    color: white;
+.decision-btn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: #ccc;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.matrix-score-btn.consider.selected {
-    background: #eab308;
-    border-color: #eab308;
-    color: black;
+.decision-btn:hover { background: rgba(255,255,255,0.08); }
+
+.decision-btn.approved.active {
+  background: rgba(0,184,148,0.15);
+  border-color: #00b894;
+  color: #00b894;
 }
 
-.matrix-score-btn.not-pass.selected {
-    background: #ef4444;
-    border-color: #ef4444;
-    color: white;
+.decision-btn.rejected.active {
+  background: rgba(225,112,85,0.15);
+  border-color: #e17055;
+  color: #e17055;
 }
 
-/* Row 11 & Row 12 Results */
-.result-row td,
-.comment-row td {
-    background: rgba(0, 0, 0, 0.2);
+/* Score input */
+.score-input {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  width: 120px;
+  outline: none;
+  transition: border-color 0.2s;
 }
 
-.result-dropdown {
-    width: 100%;
-    padding: 8px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    outline: none;
+.score-input:focus { border-color: #6c5ce7; }
+
+/* Comment textarea */
+.comment-input {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: inherit;
+  font-size: 13px;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+  line-height: 1.6;
 }
 
-.result-dropdown option {
-    background: #111;
-    color: white;
-}
+.comment-input:focus { border-color: #6c5ce7; }
 
-.result-dropdown.success {
-    background: rgba(34, 197, 94, 0.15);
-    border-color: #22c55e;
-    color: #22c55e;
-}
-
-.result-dropdown.warning {
-    background: rgba(234, 179, 8, 0.15);
-    border-color: #eab308;
-    color: #eab308;
-}
-
-.result-dropdown.error {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: #ef4444;
-    color: #ef4444;
-}
-
-.matrix-comment-input {
-    width: 100%;
-    min-height: 80px;
-    padding: 8px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
-    resize: vertical;
-    outline: none;
-}
-
-.matrix-comment-input:focus {
-    border-color: var(--primary-color, #a855f7);
-    background: rgba(255, 255, 255, 0.08);
-}
-
-.text-center {
-    text-align: center;
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
 }

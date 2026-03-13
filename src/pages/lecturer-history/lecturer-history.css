@@ -1,0 +1,64 @@
+.lecturer-history {
+  padding: 24px;
+}
+
+.lecturer-history .history-table-container {
+  overflow-x: auto;
+}
+
+.lecturer-history .history-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.lecturer-history .history-table th,
+.lecturer-history .history-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color, #eaeaea);
+}
+
+.lecturer-history .history-table th {
+  background-color: var(--bg-hover, #f8f9fa);
+  font-weight: 600;
+  color: var(--text-primary, #333);
+}
+
+.lecturer-history .history-table tr:hover {
+  background-color: var(--bg-hover, #f8f9fa);
+}
+
+.lecturer-history .table-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.lecturer-history .score-badge {
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.lecturer-history .score-badge.high {
+  background-color: rgba(46, 204, 113, 0.1);
+  color: #27ae60;
+}
+
+.lecturer-history .score-badge.medium {
+  background-color: rgba(241, 196, 15, 0.1);
+  color: #f39c12;
+}
+
+.lecturer-history .score-badge.low {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: #c0392b;
+}
+
+.lecturer-history .comment-cell {
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

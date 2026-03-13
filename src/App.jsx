@@ -15,9 +15,12 @@ import AdminUsers from './pages/admin-users/index.jsx';
 import LecturerLayout from './components/LecturerLayout.jsx';
 import LecturerTheses from './pages/lecturer-theses/index.jsx';
 import LecturerReviews from './pages/lecturer-reviews/index.jsx';
+import LecturerHistory from './pages/lecturer-history/index.jsx';
 
 import ModeratorLayout from './components/ModeratorLayout.jsx';
 import ModeratorTheses from './pages/moderator-theses/index.jsx';
+import ModeratorStats from './pages/moderator-stats/index.jsx';
+import ModeratorThirdReviewer from './pages/moderator-third-reviewer/index.jsx';
 
 import StudentLayout from './components/StudentLayout.jsx';
 import StudentDashboard from './pages/student-dashboard/index.jsx';
@@ -64,6 +67,7 @@ function App() {
           <Route index element={<Navigate to="theses" replace />} />
           <Route path="theses" element={<LecturerTheses />} />
           <Route path="reviews" element={<LecturerReviews />} />
+          <Route path="history" element={<LecturerHistory />} />
         </Route>
         
         {/* Moderator Routes - Protected with role restriction */}
@@ -77,6 +81,8 @@ function App() {
         >
           <Route index element={<Navigate to="theses" replace />} />
           <Route path="theses" element={<ModeratorTheses />} />
+          <Route path="third-reviewer" element={<ModeratorThirdReviewer />} />
+          <Route path="stats" element={<ModeratorStats />} />
         </Route>
         
         {/* Student Routes - Protected with role restriction */}

@@ -142,13 +142,20 @@ const StudentTheses = () => {
       };
 
       if (formMode === 'edit' && thesisDetail) {
-        await thesisService.updateThesis(thesisDetail.id, payload);
+        const updated = await thesisService.updateThesis(thesisDetail.id, payload);
+        const updatedId = updated?.id || thesisDetail.id;
+        localStorage.setItem('myTopicId', updatedId);
         showSuccess('Cập nhật đề tài thành công!');
       } else if (formMode === 'resubmit' && thesisDetail) {
-        await thesisService.resubmitStudentThesis(thesisDetail.id, payload);
+        const resubmitted = await thesisService.resubmitStudentThesis(thesisDetail.id, payload);
+        const resubmittedId = resubmitted?.id || thesisDetail.id;
+        localStorage.setItem('myTopicId', resubmittedId);
         showSuccess('Nộp lại đề tài thành công!');
       } else {
-        await thesisService.createStudentThesis(payload);
+        const created = await thesisService.createStudentThesis(payload);
+        if (created?.id) {
+          localStorage.setItem('myTopicId', created.id);
+        }
         showSuccess('Nộp đề tài thành công! Vui lòng chờ phản hồi.');
       }
       
