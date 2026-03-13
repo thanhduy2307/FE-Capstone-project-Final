@@ -119,7 +119,21 @@ const thesisService = {
      */
     async getTopicsByStatus(status) {
         try {
-            const response = await axiosInstance.get(`/api/topics/status/${status}`);
+            const response = await axiosInstance.get(API_ENDPOINTS.THESIS.BY_STATUS(status));
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    /**
+     * Get topics by semester
+     * @param {number} semesterId
+     * @returns {Promise}
+     */
+    async getTopicsBySemester(semesterId) {
+        try {
+            const response = await axiosInstance.get(API_ENDPOINTS.THESIS.BY_SEMESTER(semesterId));
             return response.data;
         } catch (error) {
             throw error;

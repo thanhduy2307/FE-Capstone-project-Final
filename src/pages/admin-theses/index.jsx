@@ -6,6 +6,7 @@ import Button from '../../components/Button.jsx';
 import Card from '../../components/Card.jsx';
 import Input from '../../components/Input.jsx';
 import thesisService from '../../services/thesisService.js';
+import useSemesterStore from '../../stores/semesterStore.js';
 import { showSuccess, showError } from '../../utils/alert.js';
 import './admin-theses.css';
 
@@ -17,65 +18,87 @@ const AdminTheses = () => {
   const [emailData, setEmailData] = useState({ subject: '', message: '' });
   const [currentThesis, setCurrentThesis] = useState(null);
 
-  // Mock data - replace with real API call
+  const { activeSemester, fetchActiveSemester } = useSemesterStore();
+
   useEffect(() => {
-    fetchTheses();
+    const initData = async () => {
+      try {
+        let sem = activeSemester;
+        if (!sem) {
+          sem = await fetchActiveSemester();
+        }
+        if (sem) {
+          await fetchTheses(sem.id);
+        } else {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Lỗi khởi tạo:', error);
+        setIsLoading(false);
+      }
+    };
+    initData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchTheses = async () => {
+  const fetchTheses = async (semesterId) => {
     setIsLoading(true);
-    // Mock data
-    setTimeout(() => {
-      setTheses([
-        {
-          id: 1,
-          title: 'Machine Learning for Predictive Analytics',
-          studentName: 'Nguyễn Văn A',
-          supervisorName: 'TS. Trần Thị B',
-          supervisorEmail: 'tranthib@university.edu.vn',
-          submittedDate: '2024-01-15',
-          status: 'approved',
-        },
-        {
-          id: 2,
-          title: 'Blockchain Technology in Supply Chain',
-          studentName: 'Lê Thị C',
-          supervisorName: 'PGS.TS. Phạm Văn D',
-          supervisorEmail: 'phamvand@university.edu.vn',
-          submittedDate: '2024-01-16',
-          status: 'pending',
-        },
-        {
-          id: 3,
-          title: 'IoT Applications in Smart Cities',
-          studentName: 'Hoàng Văn E',
-          supervisorName: 'TS. Võ Thị F',
-          supervisorEmail: 'vothif@university.edu.vn',
-          submittedDate: '2024-01-17',
-          status: 'rejected',
-        },
-      ]);
+    try {
+      const data = await thesisService.getTopicsBySemester(semesterId);
+      // Map API data to table columns
+      const mapped = data.map(t => {
+          let studentName = 'N/A';
+          try {
+             if (t.studentGroupInfo) {
+                 const parsed = JSON.parse(t.studentGroupInfo);
+                 if (Array.isArray(parsed) && parsed.length > 0) {
+                     studentName = parsed[0].name + (parsed.length > 1 ? ` (+${parsed.length - 1})` : '');
+                 }
+             }
+          } catch (error) {
+            console.error('Lỗi parse JSON studentGroupInfo:', error);
+          }
+
+          return {
+             ...t,
+             title: t.titleVi || t.titleEn || t.title || 'Chưa có tên',
+             studentName: studentName,
+             supervisorName: t.supervisor?.fullName || t.supervisor?.name || 'Chưa phân công',
+             supervisorEmail: t.supervisor?.email || '',
+             submittedDate: t.createdAt ? new Date(t.createdAt).toLocaleDateString('vi-VN') : 'N/A',
+             status: t.status ? t.status.toLowerCase() : 'pending' 
+          };
+      });
+      setTheses(mapped);
+    } catch (error) {
+      console.error('Failed to fetch theses:', error);
+      showError('Không thể tải danh sách đề tài!');
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   const handleApprove = async (id) => {
     try {
-      await thesisService.approveThesis(id);
-      fetchTheses();
+      await thesisService.updateThesis(id, { status: 'APPROVED' });
+      showSuccess('Đã phê duyệt đề tài thành công!');
+      if (activeSemester) fetchTheses(activeSemester.id);
     } catch (error) {
       console.error('Failed to approve thesis:', error);
+      showError('Phê duyệt đề tài thất bại!');
     }
   };
 
   const handleReject = async (id) => {
     const reason = prompt('Lý do từ chối:');
-    if (reason) {
+    if (reason !== null) {
       try {
-        await thesisService.rejectThesis(id, reason);
-        fetchTheses();
+        await thesisService.updateThesis(id, { status: 'REJECTED', rejectReason: reason });
+        showSuccess('Đã từ chối đề tài!');
+        if (activeSemester) fetchTheses(activeSemester.id);
       } catch (error) {
         console.error('Failed to reject thesis:', error);
+        showError('Từ chối đề tài thất bại!');
       }
     }
   };
@@ -181,36 +204,36 @@ const AdminTheses = () => {
         </Badge>
       ),
     },
-    // {
-    //   key: 'actions',
-    //   label: 'Actions',
-    //   render: (_, row) => (
-    //     <div className="action-buttons">
-    //       {row.status === 'pending' && (
-    //         <>
-    //           <button
-    //             className="action-btn approve-btn"
-    //             onClick={() => handleApprove(row.id)}
-    //           >
-    //             Approve
-    //           </button>
-    //           <button
-    //             className="action-btn reject-btn"
-    //             onClick={() => handleReject(row.id)}
-    //           >
-    //             Reject
-    //           </button>
-    //         </>
-    //       )}
-    //       <button
-    //         className="action-btn email-btn"
-    //         onClick={() => handleSendEmail(row)}
-    //       >
-    //         Email
-    //       </button>
-    //     </div>
-    //   ),
-    // },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <div className="action-buttons">
+          {row.status === 'pending' && (
+            <>
+              <button
+                className="action-btn approve-btn"
+                onClick={() => handleApprove(row.id)}
+              >
+                Approve
+              </button>
+              <button
+                className="action-btn reject-btn"
+                onClick={() => handleReject(row.id)}
+              >
+                Reject
+              </button>
+            </>
+          )}
+          <button
+            className="action-btn email-btn"
+            onClick={() => handleSendEmail(row)}
+          >
+            Email
+          </button>
+        </div>
+      ),
+    },
   ];
 
   return (

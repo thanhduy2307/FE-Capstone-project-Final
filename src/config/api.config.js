@@ -43,6 +43,8 @@ export const API_ENDPOINTS = {
     DELETE: (id) => `/api/topics/${id}`,
     STUDENT_REGISTER: '/api/topics',
     STUDENT_RESUBMIT: (parentTopicId) => `/api/topics/${parentTopicId}/resubmit`,
+    BY_SEMESTER: (semesterId) => `/api/topics/semester/${semesterId}`,
+    BY_STATUS: (status) => `/api/topics/status/${status}`,
   },
 
   // Registration Phase endpoints
