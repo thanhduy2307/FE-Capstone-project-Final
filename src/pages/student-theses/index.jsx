@@ -50,6 +50,42 @@ const StudentTheses = () => {
     const activeInfo = await fetchActiveSemester();
     if (activeInfo) {
       await fetchOpenPeriods(activeInfo.id);
+      
+      // Try to load user's existing thesis
+      try {
+        const allTheses = await thesisService.getTopicsBySemester(activeInfo.id);
+        
+        let userThesis = null;
+        for (const t of allTheses) {
+            if (t.studentGroupInfo) {
+                try {
+                    const parsedGroup = JSON.parse(t.studentGroupInfo);
+                    const isMember = parsedGroup.some(sv => 
+                      sv.code === user?.username || 
+                      sv.email === user?.email || 
+                      t.studentGroupInfo.includes(user?.username) || 
+                      t.studentGroupInfo.includes(user?.email)
+                    );
+                    if (isMember) {
+                        userThesis = t;
+                        break;
+                    }
+                } catch (e) {
+                    if (t.studentGroupInfo.includes(user?.username) || t.studentGroupInfo.includes(user?.email)) {
+                        userThesis = t;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (userThesis) {
+            setThesisDetail(userThesis);
+            setHasThesis(true);
+        }
+      } catch (error) {
+        console.error('Lỗi khi tải đề tài của sinh viên:', error);
+      }
     }
     setIsLoadingPeriods(false);
   };
