@@ -251,17 +251,17 @@ const AdminTheses = () => {
 
             <div>
               <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', marginBottom: '4px' }}>Tên Tiếng Việt</p>
-              <div style={{ fontWeight: 500 }}>{selectedThesisDetail.titleVi || 'N/A'}</div>
+              <div style={{ fontWeight: 500, color: '#111827' }}>{selectedThesisDetail.titleVi || 'N/A'}</div>
             </div>
 
             <div>
               <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', marginBottom: '4px' }}>Tên Tiếng Anh</p>
-              <div>{selectedThesisDetail.titleEn || 'N/A'}</div>
+              <div style={{ color: '#111827' }}>{selectedThesisDetail.titleEn || 'N/A'}</div>
             </div>
 
             <div>
               <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', marginBottom: '4px' }}>Mô tả</p>
-              <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px', whiteSpace: 'pre-wrap' }}>
+              <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px', whiteSpace: 'pre-wrap', color: 'var(--text-primary)' }}>
                 {selectedThesisDetail.description || 'Không có mô tả'}
               </div>
             </div>
@@ -269,13 +269,13 @@ const AdminTheses = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', marginBottom: '4px' }}>Nhóm Sinh Viên</p>
-                <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px', color: 'var(--text-primary)' }}>
                   {renderStudentGroup(selectedThesisDetail.studentGroupInfo)}
                 </div>
               </div>
               <div>
                 <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', marginBottom: '4px' }}>Giảng Viên</p>
-                <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px' }}>
+                <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px', color: 'var(--text-primary)' }}>
                   <div style={{ fontWeight: 500 }}>HD1: {selectedThesisDetail.supervisor?.fullName || 'Chưa có'}</div>
                   {selectedThesisDetail.supervisor2 && (
                     <div style={{ marginTop: '8px', fontWeight: 500 }}>HD2: {selectedThesisDetail.supervisor2.fullName}</div>
@@ -289,11 +289,14 @@ const AdminTheses = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', marginBottom: '4px' }}>Khoa</p>
-                <div>{selectedThesisDetail.department || 'N/A'}</div>
+                <div style={{ color: '#111827', fontWeight: 500 }}>{selectedThesisDetail.department || 'N/A'}</div>
               </div>
               <div>
-                <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', marginBottom: '4px' }}>Đợt đăng ký</p>
-                <div>{selectedThesisDetail.registrationPhase?.name || 'N/A'} - {selectedThesisDetail.semester?.code || ''}</div>
+                <p style={{ color: 'var(--text-tertiary)', fontSize: '13px', marginBottom: '4px' }}>Học kỳ / Đợt</p>
+                <div style={{ color: '#111827', fontWeight: 500 }}>
+                  <Badge variant="default" style={{ marginRight: '8px' }}>{selectedThesisDetail.semester?.code || selectedThesisDetail.semester?.name || 'N/A'}</Badge>
+                  {selectedThesisDetail.registrationPhase?.name || 'N/A'}
+                </div>
               </div>
             </div>
 
