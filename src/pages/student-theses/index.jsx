@@ -28,9 +28,12 @@ const StudentTheses = () => {
     titleVi: '',
     description: '',
     department: '',
-    studentCount: 1,
-    studentGroupInfo: '',
   });
+  
+  // Dynamic student list instead of raw JSON string
+  const [studentsList, setStudentsList] = useState([
+    { name: '', code: '' }
+  ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -51,6 +54,28 @@ const StudentTheses = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Student List Handlers
+  const handleStudentChange = (index, field, value) => {
+    const newList = [...studentsList];
+    newList[index][field] = value;
+    setStudentsList(newList);
+  };
+
+  const handleAddStudent = () => {
+    if (studentsList.length < 5) {
+      setStudentsList([...studentsList, { name: '', code: '' }]);
+    } else {
+      showWarning('Số lượng thành viên tối đa là 5.');
+    }
+  };
+
+  const handleRemoveStudent = (index) => {
+    if (studentsList.length > 1) {
+      const newList = studentsList.filter((_, i) => i !== index);
+      setStudentsList(newList);
+    }
+  };
+
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     if (!activeSemester) {
@@ -58,20 +83,18 @@ const StudentTheses = () => {
       return;
     }
 
-    try {
-      // Validate JSON
-      let parsedGroupInfo = null;
-      try {
-        parsedGroupInfo = JSON.parse(formData.studentGroupInfo);
-        if (!Array.isArray(parsedGroupInfo)) {
-          throw new Error('Định dạng phải là danh sách (Array)');
-        }
-      } catch (err) {
-        showWarning('Định dạng Thông tin nhóm (JSON) không hợp lệ. Vui lòng kiểm tra lại!');
-        return;
-      }
+    // Validate students have both name and code
+    const invalidStudent = studentsList.find(s => !s.name.trim() || !s.code.trim());
+    if (invalidStudent) {
+      showWarning('Vui lòng nhập đầy đủ Tên và Mã số cho tất cả thành viên trong nhóm.');
+      return;
+    }
 
+    try {
       setIsSubmitting(true);
+      // Auto-format studentsList into JSON string
+      const formattedGroupInfo = JSON.stringify(studentsList);
+
       // Construct payload according to API spec
       const payload = {
         semesterId: activeSemester.id,
@@ -80,8 +103,8 @@ const StudentTheses = () => {
         titleVi: formData.titleVi,
         description: formData.description,
         department: formData.department,
-        studentGroupInfo: formData.studentGroupInfo,
-        studentCount: parseInt(formData.studentCount)
+        studentGroupInfo: formattedGroupInfo,
+        studentCount: studentsList.length
       };
 
       if (formMode === 'edit' && thesisDetail) {
@@ -118,6 +141,15 @@ const StudentTheses = () => {
 
   const handleCancelForm = () => {
     setCurrentView('periods');
+    // Reset form
+    setFormData({
+      registrationPhaseId: '',
+      titleEn: '',
+      titleVi: '',
+      description: '',
+      department: '',
+    });
+    setStudentsList([{ name: '', code: '' }]);
   };
 
   const renderPeriodsView = () => (
@@ -196,21 +228,62 @@ const StudentTheses = () => {
             required 
           />
         </div>
-        <div className="form-group" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '15px' }}>
+        <div className="form-group" style={{ display: 'grid', gap: '20px', marginTop: '15px' }}>
           <div>
             <label>Mã ngành:</label>
             <Input name="department" value={formData.department} onChange={handleInputChange} placeholder="VD: SE, IA, AI..." required />
           </div>
-          <div>
-            <label>Số lượng thành viên:</label>
-            <Input type="number" min="1" max="5" name="studentCount" value={formData.studentCount} onChange={handleInputChange} placeholder="Ví dụ: 3" required />
-          </div>
         </div>
-        <div className="form-group" style={{ marginTop: '15px' }}>
-          <label>Thông tin nhóm (JSON theo mẫu): <br/>
-            <small style={{color: 'var(--text-secondary)'}}>Ví dụ: <code>[&#123;"name":"Nguyễn Văn A","code":"SE1"&#125;]</code></small>
-          </label>
-          <Input name="studentGroupInfo" value={formData.studentGroupInfo} onChange={handleInputChange} placeholder='[{"name":"Nguyễn Văn A","code":"SE1"}]' required />
+
+        <div className="form-group" style={{ marginTop: '20px', background: 'var(--bg-secondary)', padding: '15px', borderRadius: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <label style={{ margin: 0, fontWeight: 600 }}>Thông tin thành viên nhóm:</label>
+            <Badge variant="default">Số lượng: {studentsList.length}</Badge>
+          </div>
+          
+          {studentsList.map((student, index) => (
+            <div key={index} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '15px', alignItems: 'end', marginBottom: '15px' }}>
+              <div>
+                <label style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Họ và Tên SV {index + 1}:</label>
+                <Input 
+                  value={student.name} 
+                  onChange={(e) => handleStudentChange(index, 'name', e.target.value)} 
+                  placeholder="VD: Nguyễn Văn A" 
+                  required 
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Mã số SV {index + 1}:</label>
+                <Input 
+                  value={student.code} 
+                  onChange={(e) => handleStudentChange(index, 'code', e.target.value)} 
+                  placeholder="VD: SE17001" 
+                  required 
+                />
+              </div>
+              {studentsList.length > 1 && (
+                <Button 
+                  type="button" 
+                  variant="danger" 
+                  onClick={() => handleRemoveStudent(index)}
+                  style={{ padding: '10px 15px' }}
+                >
+                  Xóa
+                </Button>
+              )}
+            </div>
+          ))}
+          
+          {studentsList.length < 5 && (
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleAddStudent} 
+              style={{ marginTop: '5px', width: '100%', borderStyle: 'dashed' }}
+            >
+              + Thêm thành viên
+            </Button>
+          )}
         </div>
         <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
           <Button type="submit" variant="primary" disabled={isSubmitting}>
