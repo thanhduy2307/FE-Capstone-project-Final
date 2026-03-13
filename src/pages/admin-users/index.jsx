@@ -137,7 +137,7 @@ const AdminUsers = () => {
     return new Date(dateStr).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
-  const inputStyle = { padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', fontSize: '14px', width: '100%', boxSizing: 'border-box' };
+  const inputStyle = { padding: '10px 12px', borderRadius: '8px', border: '1px solid #d1d5db', background: '#f9fafb', color: '#111827', fontSize: '14px', width: '100%', boxSizing: 'border-box' };
 
   return (
     <div className="admin-users">
@@ -298,19 +298,19 @@ const AdminUsers = () => {
             <form onSubmit={handleCreateUser} className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {createError && (<div style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', color: '#ef4444', padding: '10px 14px', borderRadius: '6px', fontSize: '13px' }}>{createError}</div>)}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-secondary)' }}>Ho va ten *</label>
+                <label style={{ fontWeight: '600', fontSize: '13px', color: '#374151' }}>Ho va ten *</label>
                 <input type="text" value={createForm.fullName} onChange={(e) => setCreateForm((p) => ({ ...p, fullName: e.target.value }))} placeholder="Nguyen Van A" required style={inputStyle} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-secondary)' }}>Email *</label>
+                <label style={{ fontWeight: '600', fontSize: '13px', color: '#374151' }}>Email *</label>
                 <input type="email" value={createForm.email} onChange={(e) => setCreateForm((p) => ({ ...p, email: e.target.value }))} placeholder="example@fpt.edu.vn" required style={inputStyle} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-secondary)' }}>Mat khau *</label>
+                <label style={{ fontWeight: '600', fontSize: '13px', color: '#374151' }}>Mat khau *</label>
                 <input type="password" value={createForm.password} onChange={(e) => setCreateForm((p) => ({ ...p, password: e.target.value }))} placeholder="Toi thieu 6 ky tu" required minLength={6} style={inputStyle} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontWeight: '600', fontSize: '13px', color: 'var(--text-secondary)' }}>Vai tro *</label>
+                <label style={{ fontWeight: '600', fontSize: '13px', color: '#374151' }}>Vai tro *</label>
                 <select value={createForm.role} onChange={(e) => setCreateForm((p) => ({ ...p, role: e.target.value }))} style={inputStyle}>
                   {Object.entries(ROLE_LABELS).map(([val, label]) => (<option key={val} value={val}>{label}</option>))}
                 </select>
