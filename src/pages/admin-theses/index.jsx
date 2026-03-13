@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Table from '../../components/Table.jsx';
 import Badge from '../../components/Badge.jsx';
 import Card from '../../components/Card.jsx';
+import Button from '../../components/Button.jsx';
 import thesisService from '../../services/thesisService.js';
 import useSemesterStore from '../../stores/semesterStore.js';
 import { showSuccess, showError } from '../../utils/alert.js';
@@ -10,6 +11,7 @@ import './admin-theses.css';
 const AdminTheses = () => {
   const [theses, setTheses] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [filterType, setFilterType] = useState('ALL'); // 'ALL' or 'PASSED'
 
   const { activeSemester, fetchActiveSemester } = useSemesterStore();
 
@@ -21,7 +23,7 @@ const AdminTheses = () => {
           sem = await fetchActiveSemester();
         }
         if (sem) {
-          await fetchTheses(sem.id);
+          await fetchTheses(sem.id, filterType);
         } else {
           setIsLoading(false);
         }
@@ -32,12 +34,18 @@ const AdminTheses = () => {
     };
     initData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filterType, activeSemester]); // Refetch when filter or semester changes
 
-  const fetchTheses = async (semesterId) => {
+  const fetchTheses = async (semesterId, type) => {
     setIsLoading(true);
     try {
-      const data = await thesisService.getTopicsBySemester(semesterId);
+      let data = [];
+      if (type === 'PASSED') {
+        data = await thesisService.getPassedTopicsBySemester(semesterId);
+      } else {
+        data = await thesisService.getTopicsBySemester(semesterId);
+      }
+
       // Map API data to table columns based on topics.md response
       const mapped = data.map(t => {
         let studentName = 'N/A';
@@ -144,10 +152,27 @@ const AdminTheses = () => {
 
   return (
     <div className="admin-theses">
-      <div className="page-header">
+      <div className="page-header" style={{ marginBottom: '24px' }}>
         <div>
           <h1>Quản lý đề tài</h1>
-          <p className="page-subtitle">Danh sách toàn bộ đề tài theo kỳ hiện tại</p>
+          <p className="page-subtitle">Danh sách đề tài theo kỳ hiện tại</p>
+        </div>
+        <div className="header-actions" style={{ display: 'flex', gap: '10px' }}>
+          <Button 
+            variant={filterType === 'ALL' ? 'primary' : 'outline'} 
+            size="md"
+            onClick={() => setFilterType('ALL')}
+          >
+            Tất cả đề tài
+          </Button>
+          <Button 
+            variant={filterType === 'PASSED' ? 'primary' : 'outline'} 
+            size="md"
+            onClick={() => setFilterType('PASSED')}
+            style={filterType === 'PASSED' ? { background: 'var(--color-success)', borderColor: 'var(--color-success)' } : {}}
+          >
+            Đề tài đã đạt (PASSED)
+          </Button>
         </div>
       </div>
 
@@ -156,7 +181,7 @@ const AdminTheses = () => {
           columns={columns}
           data={theses}
           isLoading={isLoading}
-          emptyMessage="Chưa có đề tài nào trong đợt này"
+          emptyMessage={filterType === 'PASSED' ? "Không có đề tài nào ĐẠT (PASSED) trong đợt này" : "Chưa có đề tài nào trong đợt này"}
         />
       </Card>
     </div>

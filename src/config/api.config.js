@@ -44,6 +44,7 @@ export const API_ENDPOINTS = {
     STUDENT_REGISTER: '/api/topics',
     STUDENT_RESUBMIT: (parentTopicId) => `/api/topics/${parentTopicId}/resubmit`,
     BY_SEMESTER: (semesterId) => `/api/topics/semester/${semesterId}`,
+    BY_SEMESTER_PASSED: (semesterId) => `/api/topics/semester/${semesterId}/passed`,
     BY_STATUS: (status) => `/api/topics/status/${status}`,
   },
 

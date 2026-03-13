@@ -140,6 +140,20 @@ const thesisService = {
         }
     },
 
+    /**
+     * Get passed topics by semester
+     * @param {number} semesterId
+     * @returns {Promise}
+     */
+    async getPassedTopicsBySemester(semesterId) {
+        try {
+            const response = await axiosInstance.get(API_ENDPOINTS.THESIS.BY_SEMESTER_PASSED(semesterId));
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     // The previous approveThesis/rejectThesis were placeholders, we now use update API endpoints.
     // i.e `PUT /api/topics/{id}`
 };
