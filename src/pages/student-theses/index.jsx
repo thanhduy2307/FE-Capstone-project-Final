@@ -8,19 +8,16 @@ import useSemesterStore from '../../stores/semesterStore.js';
 import usePeriodStore from '../../stores/periodStore.js';
 import thesisService from '../../services/thesisService.js';
 import { showSuccess, showError, showWarning } from '../../utils/alert.js';
+import { useNavigate } from 'react-router-dom';
 import './student-theses.css';
 
 const StudentTheses = () => {
   const { user } = useAuthStore();
   const { activeSemester, fetchActiveSemester } = useSemesterStore();
   const { periods: openPeriods, fetchOpenPeriods } = usePeriodStore();
+  const navigate = useNavigate();
   
-  // Dummy data. In a real app we fetch this from API.
-  const [hasThesis, setHasThesis] = useState(false);
-  const [thesisDetail, setThesisDetail] = useState(null);
-  const [isLoadingPeriods, setIsLoadingPeriods] = useState(true);
-
-  // views: 'periods' | 'register' | 'status'
+  // views: 'periods' | 'register'
   const [currentView, setCurrentView] = useState('periods');
   const [formMode, setFormMode] = useState('register'); // 'register' | 'edit' | 'resubmit'
 
@@ -38,54 +35,13 @@ const StudentTheses = () => {
 
   useEffect(() => {
     loadSemesterData();
-    if (hasThesis) {
-      setCurrentView('status');
-    } else {
-      setCurrentView('periods');
-    }
-  }, [hasThesis]);
+  }, []);
 
   const loadSemesterData = async () => {
     setIsLoadingPeriods(true);
     const activeInfo = await fetchActiveSemester();
     if (activeInfo) {
       await fetchOpenPeriods(activeInfo.id);
-      
-      // Try to load user's existing thesis
-      try {
-        const allTheses = await thesisService.getTopicsBySemester(activeInfo.id);
-        
-        let userThesis = null;
-        for (const t of allTheses) {
-            if (t.studentGroupInfo) {
-                try {
-                    const parsedGroup = JSON.parse(t.studentGroupInfo);
-                    const isMember = parsedGroup.some(sv => 
-                      sv.code === user?.username || 
-                      sv.email === user?.email || 
-                      t.studentGroupInfo.includes(user?.username) || 
-                      t.studentGroupInfo.includes(user?.email)
-                    );
-                    if (isMember) {
-                        userThesis = t;
-                        break;
-                    }
-                } catch (e) {
-                    if (t.studentGroupInfo.includes(user?.username) || t.studentGroupInfo.includes(user?.email)) {
-                        userThesis = t;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (userThesis) {
-            setThesisDetail(userThesis);
-            setHasThesis(true);
-        }
-      } catch (error) {
-        console.error('Lỗi khi tải đề tài của sinh viên:', error);
-      }
     }
     setIsLoadingPeriods(false);
   };
@@ -103,6 +59,18 @@ const StudentTheses = () => {
     }
 
     try {
+      // Validate JSON
+      let parsedGroupInfo = null;
+      try {
+        parsedGroupInfo = JSON.parse(formData.studentGroupInfo);
+        if (!Array.isArray(parsedGroupInfo)) {
+          throw new Error('Định dạng phải là danh sách (Array)');
+        }
+      } catch (err) {
+        showWarning('Định dạng Thông tin nhóm (JSON) không hợp lệ. Vui lòng kiểm tra lại!');
+        return;
+      }
+
       setIsSubmitting(true);
       // Construct payload according to API spec
       const payload = {
@@ -112,7 +80,6 @@ const StudentTheses = () => {
         titleVi: formData.titleVi,
         description: formData.description,
         department: formData.department,
-        // Assuming studentGroupInfo is typed as JSON string matching the required format
         studentGroupInfo: formData.studentGroupInfo,
         studentCount: parseInt(formData.studentCount)
       };
@@ -128,13 +95,8 @@ const StudentTheses = () => {
         showSuccess('Nộp đề tài thành công! Vui lòng chờ phản hồi.');
       }
       
-      setThesisDetail({
-        id: thesisDetail?.id || 'T999',
-        ...formData,
-        status: formMode === 'resubmit' ? 'PENDING' : (thesisDetail?.status || 'PENDING')
-      });
-      setHasThesis(true);
-      setCurrentView('status');
+      // Navigate to the My Thesis page instead of local state swap
+      navigate('/student/my-thesis');
     } catch (error) {
       console.error('Failed to submit thesis:', error);
       showError(error.response?.data?.message || error.message || 'Có lỗi xảy ra khi nộp đề tài.');
@@ -144,43 +106,18 @@ const StudentTheses = () => {
   };
 
   const handleEditClick = () => {
-    if (thesisDetail) {
-      setFormData({
-        registrationPhaseId: thesisDetail.registrationPhaseId || '',
-        titleEn: thesisDetail.titleEn || '',
-        titleVi: thesisDetail.titleVi || '',
-        description: thesisDetail.description || '',
-        department: thesisDetail.department || '',
-        studentCount: thesisDetail.studentCount || 1,
-        studentGroupInfo: thesisDetail.studentGroupInfo || '',
-      });
-    }
+    // Thesis info is passed from my-thesis if needed, but here we just show the form
     setFormMode('edit');
     setCurrentView('register');
   };
 
   const handleResubmitClick = () => {
-    if (thesisDetail) {
-      setFormData({
-        registrationPhaseId: thesisDetail.registrationPhaseId || '',
-        titleEn: thesisDetail.titleEn || '',
-        titleVi: thesisDetail.titleVi || '',
-        description: thesisDetail.description || '',
-        department: thesisDetail.department || '',
-        studentCount: thesisDetail.studentCount || 1,
-        studentGroupInfo: thesisDetail.studentGroupInfo || '',
-      });
-    }
     setFormMode('resubmit');
     setCurrentView('register');
   };
 
   const handleCancelForm = () => {
-    if (formMode === 'edit' || formMode === 'resubmit') {
-      setCurrentView('status');
-    } else {
-      setCurrentView('periods');
-    }
+    setCurrentView('periods');
   };
 
   const renderPeriodsView = () => (
@@ -285,69 +222,6 @@ const StudentTheses = () => {
     </div>
   );
 
-  const renderStatusView = () => (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-        <h3 style={{ margin: 0 }}>Chi tiết Đề tài: {thesisDetail?.titleVi || 'Chưa có tên'}</h3>
-        {thesisDetail?.status === 'PENDING' && (
-          <Button size="sm" variant="outline" onClick={handleEditClick}>Sửa Đề tài</Button>
-        )}
-      </div>
-      <hr style={{borderColor: 'var(--border-color)', margin: '15px 0'}} />
-      <div style={{display: 'flex', gap: '40px', lineHeight: '2'}}>
-        <div>
-          <p><strong>Mã Đề tài:</strong> {thesisDetail?.id || '---'}</p>
-          <p><strong>Ngành:</strong> {thesisDetail?.department || '---'}</p>
-          <p><strong>Số lượng TV:</strong> {thesisDetail?.studentCount || 1}</p>
-        </div>
-        <div>
-          <p><strong>Trình trạng nộp:</strong> Đã gửi biên bản đề xuất</p>
-          <p>
-            <strong>Đánh giá AI:</strong> <Badge variant="success">95/100 Điểm (PASS)</Badge>
-          </p>
-          <p>
-            <strong>Trạng thái phê duyệt:</strong>{' '}
-            {thesisDetail?.status === 'REJECTED' ? (
-              <Badge variant="danger">REJECTED (Bị từ chối)</Badge>
-            ) : thesisDetail?.status === 'APPROVED' ? (
-              <Badge variant="success">APPROVED (Đã duyệt)</Badge>
-            ) : (
-              <Badge variant="warning">PENDING (Chờ duyệt)</Badge>
-            )}
-          </p>
-        </div>
-      </div>
-      
-      <div style={{ marginTop: '30px', padding: '15px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
-        <h4 style={{ marginBottom: '10px' }}>Kết quả Đăng ký Đề tài</h4>
-        {thesisDetail?.status === 'REJECTED' ? (
-          <div>
-            <p style={{ color: 'var(--text-danger)', marginBottom: '15px' }}>
-              Đề tài của bạn đã bị từ chối. Vui lòng xem lại nhận xét và tiến hành nộp lại.
-            </p>
-            <Button variant="danger" onClick={handleResubmitClick}>Nộp Lại Đề Tài</Button>
-          </div>
-        ) : thesisDetail?.status === 'APPROVED' ? (
-          <p>Đề tài của bạn đã được phê duyệt thành công! Bạn có thể xem chi tiết và nộp bản hoàn chỉnh bên dưới.</p>
-        ) : (
-          <p>
-            Đề tài của bạn đã được hệ thống ghi nhận.
-            Đang trong quá trình chờ phê duyệt bởi Hội đồng chuyên môn (Moderator).
-          </p>
-        )}
-      </div>
-
-      <div style={{marginTop: '30px'}}>
-        <h4>Nộp bản hoàn chỉnh</h4>
-        <p style={{color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '10px'}}>
-          Vui lòng nộp báo cáo hoàn thiện theo yêu cầu của Giảng viên HD (áp dụng sau khi được duyệt).
-        </p>
-        <input type="file" style={{ color: 'var(--text-primary)', marginTop: '8px'}} disabled={thesisDetail?.status !== 'APPROVED'} />
-        <Button size="sm" variant="primary" style={{marginTop: '15px', display: 'block'}} disabled={thesisDetail?.status !== 'APPROVED'}>Upload Báo Cáo</Button>
-      </div>
-    </div>
-  );
-
   return (
     <div className="student-theses">
       <div className="page-header">
@@ -355,11 +229,6 @@ const StudentTheses = () => {
           <>
             <h1>Đăng Ký Đề Tài Mới</h1>
             <p>Điền thông tin chi tiết vào biểu mẫu bên dưới</p>
-          </>
-        ) : currentView === 'status' ? (
-          <>
-            <h1>Đề Tài Của Tôi</h1>
-            <p>Chi tiết quá trình thực hiện và trạng thái phê duyệt Đề tài</p>
           </>
         ) : (
           <>
@@ -372,7 +241,6 @@ const StudentTheses = () => {
       <Card>
         {currentView === 'periods' && renderPeriodsView()}
         {currentView === 'register' && renderRegisterView()}
-        {currentView === 'status' && renderStatusView()}
       </Card>
     </div>
   );
