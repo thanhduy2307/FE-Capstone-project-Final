@@ -6,6 +6,7 @@ import Modal from '../../components/Modal.jsx';
 import Input from '../../components/Input.jsx';
 import Table from '../../components/Table.jsx';
 import useSupervisorStore from '../../stores/supervisorStore.js';
+import { showSuccess, showError, showInfo } from '../../utils/alert.js';
 import './supervisor-theses.css';
 
 const SupervisorTheses = () => {
@@ -62,7 +63,7 @@ const SupervisorTheses = () => {
 
   const handleDownloadFile = (thesis) => {
     // Mock download - in production, this would call the API
-    alert(`Đang tải file: ${thesis.fileName}`);
+    showInfo(`Đang tải file: ${thesis.fileName}`);
     // window.open(thesis.fileUrl, '_blank');
   };
 
@@ -77,11 +78,11 @@ const SupervisorTheses = () => {
 
     try {
       // await sendToCoordinator(selectedThesis.id, coordinatorNote);
-      alert(`Đã gửi đề tài "${selectedThesis.title}" cho người điều phối!`);
+      showSuccess(`Đã gửi đề tài "${selectedThesis.title}" cho người điều phối!`);
       setIsSendModalOpen(false);
       setCoordinatorNote('');
     } catch (error) {
-      alert('Gửi đề tài thất bại!');
+      showError('Gửi đề tài thất bại!');
     }
   };
 

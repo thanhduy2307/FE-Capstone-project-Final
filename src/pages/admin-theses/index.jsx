@@ -6,6 +6,7 @@ import Button from '../../components/Button.jsx';
 import Card from '../../components/Card.jsx';
 import Input from '../../components/Input.jsx';
 import thesisService from '../../services/thesisService.js';
+import { showSuccess, showError } from '../../utils/alert.js';
 import './admin-theses.css';
 
 const AdminTheses = () => {
@@ -116,10 +117,10 @@ const AdminTheses = () => {
       
       setIsBulkEmailModalOpen(false);
       setBulkEmailData({ subject: '', message: '' });
-      alert(`Email đã được gửi thành công đến ${uniqueSupervisors.length} giảng viên!`);
+      showSuccess(`Email đã được gửi thành công đến ${uniqueSupervisors.length} giảng viên!`);
     } catch (error) {
       console.error('Failed to send bulk email:', error);
-      alert('Gửi email hàng loạt thất bại!');
+      showError('Gửi email hàng loạt thất bại!');
     }
   };
 
@@ -130,10 +131,10 @@ const AdminTheses = () => {
       await thesisService.sendEmailToSupervisor(currentThesis.id, emailData);
       setIsEmailModalOpen(false);
       setEmailData({ subject: '', message: '' });
-      alert('Email đã được gửi thành công!');
+      showSuccess('Email đã được gửi thành công!');
     } catch (error) {
       console.error('Failed to send email:', error);
-      alert('Gửi email thất bại!');
+      showError('Gửi email thất bại!');
     }
   };
 

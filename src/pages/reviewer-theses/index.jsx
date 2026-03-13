@@ -5,6 +5,7 @@ import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
 import Table from '../../components/Table.jsx';
 import useReviewerStore from '../../stores/reviewerStore.js';
+import { showSuccess, showError, showWarning, showInfo } from '../../utils/alert.js';
 import './reviewer-theses.css';
 
 const ReviewerTheses = () => {
@@ -82,7 +83,7 @@ const ReviewerTheses = () => {
 
   const handleSubmitReview = async () => {
     if (!reviewDecision) {
-      alert('Vui lòng chọn quyết định!');
+      showWarning('Vui lòng chọn quyết định!');
       return;
     }
 
@@ -92,15 +93,15 @@ const ReviewerTheses = () => {
       //   comment: reviewComment,
       // });
       
-      alert(`Đã gửi review: ${reviewDecision === 'approve' ? 'APPROVE ✅' : 'REJECT ❌'}`);
+      showSuccess(`Đã gửi review: ${reviewDecision === 'approve' ? 'APPROVE ✅' : 'REJECT ❌'}`);
       setIsReviewModalOpen(false);
     } catch (error) {
-      alert('Gửi review thất bại!');
+      showError('Gửi review thất bại!');
     }
   };
 
   const handleDownloadFile = (thesis) => {
-    alert(`Đang tải file: ${thesis.fileName}`);
+    showInfo(`Đang tải file: ${thesis.fileName}`);
   };
 
   const getStatusVariant = (status) => {

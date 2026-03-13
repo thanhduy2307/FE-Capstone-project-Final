@@ -12,18 +12,20 @@ const useSemesterStore = create((set, get) => ({
         set({ isLoading: true, error: null });
         try {
             const data = await semesterService.getSemesters();
-            set({ semesters: data, isLoading: false });
+            // Also detect active semester from the list (API embeds it)
+            const active = data.find(s => s.isActive) || null;
+            set({ semesters: data, activeSemester: active, isLoading: false });
             return data;
         } catch (error) {
             set({
-                error: error.response?.data?.message || 'Failed to fetch semesters',
+                error: error.message || 'Failed to fetch semesters',
                 isLoading: false
             });
             throw error;
         }
     },
 
-    // Fetch active semester
+    // Fetch active semester (tries API first, fallback to what's in semesters list)
     fetchActiveSemester: async () => {
         set({ isLoading: true, error: null });
         try {
@@ -31,15 +33,11 @@ const useSemesterStore = create((set, get) => ({
             set({ activeSemester: data, isLoading: false });
             return data;
         } catch (error) {
-            set({
-                error: error.response?.data?.message || 'Failed to fetch active semester',
-                isLoading: false
-            });
-            // Don't throw if it's just a 404 meaning no active semester
-            if (error.response?.status !== 404) {
-                throw error;
-            }
-            return null;
+            // If 404 or error, try to get active from already-loaded semesters list
+            const { semesters } = get();
+            const active = semesters.find(s => s.isActive) || null;
+            set({ activeSemester: active, isLoading: false, error: null });
+            return active;
         }
     },
 
@@ -55,28 +53,42 @@ const useSemesterStore = create((set, get) => ({
             return newSemester;
         } catch (error) {
             set({
-                error: error.response?.data?.message || 'Failed to create semester',
+                error: error.message || 'Failed to create semester',
                 isLoading: false
             });
             throw error;
         }
     },
 
-    // Activate semester
+    // Activate semester - PUT /api/semesters/{id}/activate
     activateSemester: async (id) => {
         set({ isLoading: true, error: null });
         try {
-            const activatedSemester = await semesterService.activateSemester(id);
-            // Updating all to inactive and this one to active might require a re-fetch, but let's do locally what we can
-            // Safest way is to refetch all semesters and active semester
+            const result = await semesterService.activateSemester(id);
+            // fetchSemesters auto-detects the new activeSemester
             await get().fetchSemesters();
-            await get().fetchActiveSemester();
-            return activatedSemester;
+            return result;
         } catch (error) {
             set({
-                error: error.response?.data?.message || 'Failed to activate semester',
+                error: error.message || 'Failed to activate semester',
                 isLoading: false
             });
+            throw error;
+        }
+    },
+
+    // Delete semester - DELETE /api/semesters/{id}
+    deleteSemester: async (id) => {
+        set({ isLoading: true, error: null });
+        try {
+            await semesterService.deleteSemester(id);
+            set(state => ({
+                semesters: state.semesters.filter(s => s.id !== id),
+                activeSemester: state.activeSemester?.id === id ? null : state.activeSemester,
+                isLoading: false
+            }));
+        } catch (error) {
+            set({ error: error.message || 'Failed to delete semester', isLoading: false });
             throw error;
         }
     },

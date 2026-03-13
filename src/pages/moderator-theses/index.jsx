@@ -5,6 +5,7 @@ import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
 import Input from '../../components/Input.jsx';
 import Table from '../../components/Table.jsx';
+import { showSuccess, showWarning } from '../../utils/alert.js';
 import './moderator-theses.css';
 
 const MOCK_THESES = [
@@ -80,7 +81,7 @@ const ModeratorTheses = () => {
 
   const handleSubmitCode = () => {
     if (!inputCode.trim()) {
-      alert("Mã đề tài không được để trống");
+      showWarning("Mã đề tài không được để trống");
       return;
     }
     setTheses(prev => prev.map(t => t.id === selectedThesis.id ? { ...t, code: inputCode, status: 'pending_ai' } : t));
@@ -109,7 +110,11 @@ const ModeratorTheses = () => {
         return t;
       }));
       setIsAIModalOpen(false);
-      alert(isDuplicate ? 'Cảnh báo: Đề tài này có phần lớn nội dung trùng lặp với đồ án cũ!' : 'Kiểm tra thành công: Không phát hiện trùng lặp đáng kể.');
+      if (isDuplicate) {
+        showWarning('Cảnh báo: Đề tài này có phần lớn nội dung trùng lặp với đồ án cũ!');
+      } else {
+        showSuccess('Kiểm tra thành công: Không phát hiện trùng lặp đáng kể.');
+      }
     }, 2000); // simulate 2s check
   };
 
@@ -125,7 +130,7 @@ const ModeratorTheses = () => {
         return prev.filter(r => r !== reviewerName);
       }
       if (prev.length >= 2) {
-        alert("Chỉ được phân công tối đa 2 người chấm chính!");
+        showWarning("Chỉ được phân công tối đa 2 người chấm chính!");
         return prev;
       }
       return [...prev, reviewerName];
@@ -134,7 +139,7 @@ const ModeratorTheses = () => {
 
   const handleSubmitAssign = () => {
     if (selectedReviewers.length < 2) {
-      alert("Vui lòng chọn đủ 2 Giảng viên phản biện (Reviewer)");
+      showWarning("Vui lòng chọn đủ 2 Giảng viên phản biện (Reviewer)");
       return;
     }
     setTheses(prev => prev.map(t => t.id === selectedThesis.id ? { ...t, reviewers: selectedReviewers, status: 'assigned' } : t));

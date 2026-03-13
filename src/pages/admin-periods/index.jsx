@@ -7,72 +7,54 @@ import Card from '../../components/Card.jsx';
 import Input from '../../components/Input.jsx';
 import usePeriodStore from '../../stores/periodStore.js';
 import useSemesterStore from '../../stores/semesterStore.js';
+import { showSuccess, showError, showDeleteConfirm, showConfirm } from '../../utils/alert.js';
 import './admin-periods.css';
 
 const AdminPeriods = () => {
-  const { periods, isLoading, fetchPeriods, createPeriod, updatePeriod, deletePeriod, openPeriod, closePeriod } = usePeriodStore();
-  const { semesters, activeSemester, fetchSemesters, fetchActiveSemester, createSemester, activateSemester } = useSemesterStore();
-  
-  const [selectedPeriods, setSelectedPeriods] = useState([]);
+  const { periods, isLoading: periodsLoading, fetchPeriods, createPeriod, updatePeriod, deletePeriod, openPeriod, closePeriod } = usePeriodStore();
+  const { semesters, isLoading: semestersLoading, fetchSemesters } = useSemesterStore();
+
   const [selectedSemesterId, setSelectedSemesterId] = useState(null);
-  
+  const [selectedPeriods, setSelectedPeriods] = useState([]);
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isCreateSemesterModalOpen, setIsCreateSemesterModalOpen] = useState(false);
-  
+
   const [currentPeriod, setCurrentPeriod] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     startDate: '',
     endDate: '',
-    description: '',
   });
 
+  // Load semesters on mount
   useEffect(() => {
-    loadPeriods();
+    fetchSemesters();
   }, []);
 
-  const loadPeriods = async () => {
-    try {
-      // Mock data for now
-      setTimeout(() => {
-        // This would be replaced with actual fetchPeriods() call
-      }, 500);
-    } catch (error) {
-      console.error('Failed to fetch periods:', error);
+  // Auto-select active semester when semesters load
+  useEffect(() => {
+    if (semesters && semesters.length > 0 && !selectedSemesterId) {
+      const active = semesters.find(s => s.isActive);
+      const defaultId = active ? active.id : semesters[0].id;
+      setSelectedSemesterId(defaultId);
     }
+  }, [semesters]);
+
+  // Fetch periods whenever selected semester changes
+  useEffect(() => {
+    if (selectedSemesterId) {
+      fetchPeriods(selectedSemesterId);
+    }
+  }, [selectedSemesterId]);
+
+  const handleSemesterChange = (e) => {
+    setSelectedSemesterId(Number(e.target.value));
+    setSelectedPeriods([]);
   };
 
-  // Mock data
-  const mockPeriods = [
-    {
-      id: 1,
-      name: 'Học kỳ 1 - 2023/2024',
-      startDate: '2023-09-01',
-      endDate: '2023-12-31',
-      status: 'closed',
-      totalTheses: 45,
-    },
-    {
-      id: 2,
-      name: 'Học kỳ 2 - 2023/2024',
-      startDate: '2024-01-01',
-      endDate: '2024-05-31',
-      status: 'open',
-      totalTheses: 32,
-    },
-    {
-      id: 3,
-      name: 'Học kỳ 1 - 2024/2025',
-      startDate: '2024-09-01',
-      endDate: '2024-12-31',
-      status: 'upcoming',
-      totalTheses: 0,
-    },
-  ];
-
   const handleCreate = () => {
-    setFormData({ name: '', startDate: '', endDate: '', description: '' });
+    setFormData({ name: '', startDate: '', endDate: '' });
     setIsCreateModalOpen(true);
   };
 
@@ -80,139 +62,147 @@ const AdminPeriods = () => {
     setCurrentPeriod(period);
     setFormData({
       name: period.name,
-      startDate: period.startDate,
-      endDate: period.endDate,
-      description: period.description || '',
+      startDate: period.startDate?.split('T')[0] || period.startDate,
+      endDate: period.endDate?.split('T')[0] || period.endDate,
     });
     setIsEditModalOpen(true);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa đợt nộp này?')) {
+    const confirmed = await showDeleteConfirm('đợt đăng ký này');
+    if (confirmed) {
       try {
         await deletePeriod(id);
-        loadPeriods();
+        showSuccess('Xóa đợt đăng ký thành công!');
+        fetchPeriods(selectedSemesterId);
       } catch (error) {
         console.error('Failed to delete period:', error);
+        showError('Xóa đợt đăng ký thất bại!');
       }
     }
   };
 
   const handleOpen = async (id) => {
-    try {
-      await openPeriod(id);
-      loadPeriods();
-    } catch (error) {
-      console.error('Failed to open period:', error);
+    const confirmed = await showConfirm('Mở đợt đăng ký?', 'Sinh viên sẽ có thể nộp đề tài trong đợt này.', 'Mở');
+    if (confirmed) {
+      try {
+        await openPeriod(id);
+        showSuccess('Đã mở đợt đăng ký!');
+        fetchPeriods(selectedSemesterId);
+      } catch (error) {
+        console.error('Failed to open period:', error);
+        showError('Mở đợt đăng ký thất bại!');
+      }
     }
   };
 
   const handleClose = async (id) => {
-    try {
-      await closePeriod(id);
-      loadPeriods();
-    } catch (error) {
-      console.error('Failed to close period:', error);
+    const confirmed = await showConfirm('Đóng đợt đăng ký?', 'Sinh viên sẽ không thể nộp thêm đề tài sau khi đóng.', 'Đóng', 'Hủy');
+    if (confirmed) {
+      try {
+        await closePeriod(id);
+        showSuccess('Đã đóng đợt đăng ký!');
+        fetchPeriods(selectedSemesterId);
+      } catch (error) {
+        console.error('Failed to close period:', error);
+        showError('Đóng đợt đăng ký thất bại!');
+      }
     }
   };
 
   const handleSubmitCreate = async () => {
+    if (!formData.name || !formData.startDate || !formData.endDate) {
+      showError('Vui lòng điền đầy đủ thông tin!');
+      return;
+    }
     try {
-      await createPeriod(formData);
+      await createPeriod({ ...formData, semesterId: selectedSemesterId });
+      showSuccess('Tạo đợt đăng ký thành công!');
       setIsCreateModalOpen(false);
-      loadPeriods();
+      fetchPeriods(selectedSemesterId);
     } catch (error) {
       console.error('Failed to create period:', error);
+      showError('Tạo đợt đăng ký thất bại!');
     }
   };
 
   const handleSubmitEdit = async () => {
     if (!currentPeriod) return;
-    
     try {
       await updatePeriod(currentPeriod.id, formData);
+      showSuccess('Cập nhật đợt đăng ký thành công!');
       setIsEditModalOpen(false);
-      loadPeriods();
+      fetchPeriods(selectedSemesterId);
     } catch (error) {
       console.error('Failed to update period:', error);
+      showError('Cập nhật đợt đăng ký thất bại!');
     }
   };
 
   const getStatusVariant = (status) => {
-    switch (status) {
-      case 'open':
-        return 'success';
-      case 'closed':
-        return 'error';
-      case 'upcoming':
-        return 'info';
-      default:
-        return 'default';
+    switch (status?.toUpperCase()) {
+      case 'OPEN': return 'success';
+      case 'CLOSED': return 'error';
+      case 'UPCOMING': return 'info';
+      default: return 'default';
     }
+  };
+
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleString('vi-VN', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
   };
 
   const columns = [
     {
       key: 'name',
-      label: 'Period Name',
+      label: 'Tên Đợt',
       sortable: true,
     },
     {
       key: 'startDate',
-      label: 'Start Date',
+      label: 'Ngày bắt đầu',
       sortable: true,
+      render: (value) => formatDateTime(value),
     },
     {
       key: 'endDate',
-      label: 'End Date',
+      label: 'Ngày kết thúc',
       sortable: true,
-    },
-    {
-      key: 'totalTheses',
-      label: 'Total Theses',
-      sortable: true,
+      render: (value) => formatDateTime(value),
     },
     {
       key: 'status',
-      label: 'Status',
+      label: 'Trạng thái',
       render: (value) => (
         <Badge variant={getStatusVariant(value)}>
-          {value}
+          {value || 'UNKNOWN'}
         </Badge>
       ),
     },
     {
       key: 'actions',
-      label: 'Actions',
+      label: 'Thao tác',
       render: (_, row) => (
         <div className="action-buttons">
-          <button
-            className="action-btn edit-btn"
-            onClick={() => handleEdit(row)}
-          >
-            Edit
+          <button className="action-btn edit-btn" onClick={() => handleEdit(row)}>
+            Sửa
           </button>
-          {row.status === 'closed' && (
-            <button
-              className="action-btn open-btn"
-              onClick={() => handleOpen(row.id)}
-            >
-              Open
+          {row.status?.toUpperCase() === 'CLOSED' && (
+            <button className="action-btn open-btn" onClick={() => handleOpen(row.id)}>
+              Mở
             </button>
           )}
-          {row.status === 'open' && (
-            <button
-              className="action-btn close-btn"
-              onClick={() => handleClose(row.id)}
-            >
-              Close
+          {row.status?.toUpperCase() === 'OPEN' && (
+            <button className="action-btn close-btn" onClick={() => handleClose(row.id)}>
+              Đóng
             </button>
           )}
-          <button
-            className="action-btn delete-btn"
-            onClick={() => handleDelete(row.id)}
-          >
-            Delete
+          <button className="action-btn delete-btn" onClick={() => handleDelete(row.id)}>
+            Xóa
           </button>
         </div>
       ),
@@ -222,67 +212,107 @@ const AdminPeriods = () => {
   const PeriodForm = () => (
     <div className="period-form">
       <div className="form-group">
-        <label>Tên đợt nộp:</label>
+        <label>Tên đợt đăng ký: *</label>
         <Input
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          placeholder="VD: Học kỳ 1 - 2024/2025"
+          placeholder="VD: Đợt 1 - Nộp đề tài Sinh viên"
         />
       </div>
       <div className="form-row">
         <div className="form-group">
-          <label>Ngày bắt đầu:</label>
+          <label>Ngày bắt đầu: *</label>
           <Input
-            type="date"
+            type="datetime-local"
             value={formData.startDate}
             onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
           />
         </div>
         <div className="form-group">
-          <label>Ngày kết thúc:</label>
+          <label>Ngày kết thúc: *</label>
           <Input
-            type="date"
+            type="datetime-local"
             value={formData.endDate}
             onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
           />
         </div>
       </div>
-      <div className="form-group">
-        <label>Mô tả:</label>
-        <textarea
-          className="form-textarea"
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          placeholder="Nhập mô tả cho đợt nộp"
-          rows="4"
-        />
-      </div>
     </div>
   );
+
+  const selectedSemester = semesters.find(s => s.id === selectedSemesterId);
 
   return (
     <div className="admin-periods">
       <div className="page-header">
         <div>
-          <h1>Period Management</h1>
-          <p className="page-subtitle">Quản lý đợt nộp đề tài</p>
+          <h1>Quản lý Đợt Đăng ký</h1>
+          <p className="page-subtitle">Quản lý các đợt nộp đề tài theo từng học kỳ</p>
         </div>
         <div className="header-actions">
-          <Button variant="primary" size="md" onClick={handleCreate}>
-            + Tạo đợt nộp mới
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleCreate}
+            disabled={!selectedSemesterId}
+          >
+            + Tạo đợt mới
           </Button>
         </div>
       </div>
 
+      {/* Semester Selector */}
+      <Card style={{ marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <label style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>📅 Chọn Học kỳ:</label>
+          {semestersLoading ? (
+            <span style={{ color: 'var(--text-secondary)' }}>Đang tải...</span>
+          ) : (
+            <select
+              value={selectedSemesterId || ''}
+              onChange={handleSemesterChange}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '8px',
+                border: '1px solid var(--border-color)',
+                background: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                fontSize: '14px',
+                minWidth: '220px',
+                cursor: 'pointer',
+              }}
+            >
+              {semesters.map(sem => (
+                <option key={sem.id} value={sem.id}>
+                  {sem.name} ({sem.code}){sem.isActive ? ' ✅ Active' : ''}
+                </option>
+              ))}
+            </select>
+          )}
+          {selectedSemester && (
+            <Badge variant={selectedSemester.isActive ? 'success' : 'default'}>
+              {selectedSemester.isActive ? 'ACTIVE' : 'Inactive'}
+            </Badge>
+          )}
+          {selectedSemester && (
+            <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
+              {new Date(selectedSemester.startDate).toLocaleDateString('vi-VN')} –{' '}
+              {new Date(selectedSemester.endDate).toLocaleDateString('vi-VN')}
+            </span>
+          )}
+        </div>
+      </Card>
+
+      {/* Periods Table */}
       <Card>
         <Table
           columns={columns}
-          data={mockPeriods}
-          isLoading={isLoading}
+          data={periods}
+          isLoading={periodsLoading}
           selectable={true}
           selectedRows={selectedPeriods}
           onSelectionChange={setSelectedPeriods}
-          emptyMessage="Chưa có đợt nộp nào"
+          emptyMessage={selectedSemesterId ? 'Học kỳ này chưa có đợt đăng ký nào' : 'Vui lòng chọn học kỳ'}
         />
       </Card>
 
@@ -290,16 +320,12 @@ const AdminPeriods = () => {
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Tạo đợt nộp mới"
+        title={`Tạo đợt đăng ký mới${selectedSemester ? ` — ${selectedSemester.name}` : ''}`}
         size="md"
         footer={
           <>
-            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-              Hủy
-            </Button>
-            <Button variant="primary" onClick={handleSubmitCreate}>
-              Tạo
-            </Button>
+            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>Hủy</Button>
+            <Button variant="primary" onClick={handleSubmitCreate}>Tạo</Button>
           </>
         }
       >
@@ -310,16 +336,12 @@ const AdminPeriods = () => {
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title="Chỉnh sửa đợt nộp"
+        title="Chỉnh sửa đợt đăng ký"
         size="md"
         footer={
           <>
-            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
-              Hủy
-            </Button>
-            <Button variant="primary" onClick={handleSubmitEdit}>
-              Lưu
-            </Button>
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Hủy</Button>
+            <Button variant="primary" onClick={handleSubmitEdit}>Lưu</Button>
           </>
         }
       >

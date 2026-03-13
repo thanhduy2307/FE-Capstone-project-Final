@@ -10,6 +10,12 @@ const semesterService = {
         return response.data;
     },
 
+    // Get semester by ID
+    getSemesterById: async (id) => {
+        const response = await api.get(`/api/semesters/${id}`);
+        return response.data;
+    },
+
     // Get active semester
     getActiveSemester: async () => {
         const response = await api.get('/api/semesters/active');

@@ -6,6 +6,7 @@ import Modal from '../../components/Modal.jsx';
 import Input from '../../components/Input.jsx';
 import Table from '../../components/Table.jsx';
 import useCoordinatorStore from '../../stores/coordinatorStore.js';
+import { showSuccess, showError, showWarning, showInfoAlert } from '../../utils/alert.js';
 import './coordinator-theses.css';
 
 // Mock data - MOVED OUTSIDE COMPONENT to prevent re-creation
@@ -95,12 +96,12 @@ const CoordinatorTheses = () => {
 
   const handleSubmitCode = useCallback(async () => {
     if (!thesisCode.trim()) {
-      alert('Vui lòng nhập mã đề tài!');
+      showWarning('Vui lòng nhập mã đề tài!');
       return;
     }
     
     // await assignCode(selectedThesis.id, thesisCode);
-    alert(`Đã gán mã ${thesisCode} cho đề tài!`);
+    showSuccess(`Đã gán mã ${thesisCode} cho đề tài!`);
     setIsCodeModalOpen(false);
   }, [thesisCode, selectedThesis]);
 
@@ -127,7 +128,10 @@ const CoordinatorTheses = () => {
       };
       
       setAiCheckResult(mockResult);
-      alert(`AI Check hoàn tất!\nĐiểm: ${mockResult.score}/100\nKết quả: ${mockResult.passed ? 'ĐẠT ✅' : 'KHÔNG ĐẠT ❌'}`);
+      showInfoAlert(
+        `AI Check hoàn tất! Điểm: ${mockResult.score}/100`,
+        `Kết quả: ${mockResult.passed ? 'ĐẠT ✅' : 'KHÔNG ĐẠT ❌'}`
+      );
     }, 2000);
   }, []);
 
@@ -139,12 +143,12 @@ const CoordinatorTheses = () => {
 
   const handleSubmitReject = useCallback(async () => {
     if (!rejectReason.trim()) {
-      alert('Vui lòng nhập lý do từ chối!');
+      showWarning('Vui lòng nhập lý do từ chối!');
       return;
     }
     
     // await rejectThesis(selectedThesis.id, rejectReason);
-    alert('Đã từ chối đề tài!');
+    showSuccess('Đã từ chối đề tài!');
     setIsRejectModalOpen(false);
   }, [rejectReason, selectedThesis]);
 
@@ -164,7 +168,7 @@ const CoordinatorTheses = () => {
       } else if (prev.length < maxReviewers) {
         return [...prev, reviewerId];
       } else {
-        alert(`Chỉ được chọn tối đa ${maxReviewers} reviewer!`);
+        showWarning(`Chỉ được chọn tối đa ${maxReviewers} reviewer!`);
         return prev;
       }
     });
@@ -175,15 +179,15 @@ const CoordinatorTheses = () => {
     const requiredCount = isTieBreaker ? 1 : 2;
     
     if (selectedReviewers.length !== requiredCount) {
-      alert(`Vui lòng chọn đúng ${requiredCount} reviewer!`);
+      showWarning(`Vui lòng chọn đúng ${requiredCount} reviewer!`);
       return;
     }
     
     // await assignReviewers(selectedThesis.id, selectedReviewers);
     if (isTieBreaker) {
-      alert('Đã thêm reviewer thứ 3 thành công!');
+      showSuccess('Đã thêm reviewer thứ 3 thành công!');
     } else {
-      alert('Đã phân công 2 reviewer thành công!');
+      showSuccess('Đã phân công 2 reviewer thành công!');
     }
     setIsAssignModalOpen(false);
   }, [selectedThesis, selectedReviewers]);

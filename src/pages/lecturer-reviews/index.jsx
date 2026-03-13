@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Card from '../../components/Card.jsx';
 import Button from '../../components/Button.jsx';
 import Badge from '../../components/Badge.jsx';
+import { showSuccess } from '../../utils/alert.js';
 import './lecturer-reviews.css';
 
 const LecturerReviews = () => {
@@ -74,7 +75,7 @@ const LecturerReviews = () => {
 
   const handleSaveAll = () => {
     console.log('Saved Evaluations:', evaluations);
-    alert('Đã lưu thành công tất cả đánh giá!');
+    showSuccess('Đã lưu thành công tất cả đánh giá!');
   };
 
   return (

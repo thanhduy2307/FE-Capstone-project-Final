@@ -10,6 +10,7 @@ import AdminTheses from './pages/admin-theses/index.jsx';
 import AdminPeriods from './pages/admin-periods/index.jsx';
 import AdminLecturers from './pages/admin-lecturers/index.jsx';
 import AdminStudents from './pages/admin-students/index.jsx';
+import AdminUsers from './pages/admin-users/index.jsx';
 
 import LecturerLayout from './components/LecturerLayout.jsx';
 import LecturerTheses from './pages/lecturer-theses/index.jsx';
@@ -47,6 +48,7 @@ function App() {
           <Route path="periods" element={<AdminPeriods />} />
           <Route path="lecturers" element={<AdminLecturers />} />
           <Route path="students" element={<AdminStudents />} />
+          <Route path="users" element={<AdminUsers />} />
         </Route>
         
         {/* Lecturer Routes - Protected with role restriction */}

@@ -96,7 +96,7 @@ const usePeriodStore = create((set, get) => ({
         }
     },
 
-    // Delete period
+    // Delete period - DELETE /api/registration-phases/{id}
     deletePeriod: async (id) => {
         set({ isLoading: true, error: null });
         try {
@@ -107,15 +107,12 @@ const usePeriodStore = create((set, get) => ({
                 isLoading: false
             }));
         } catch (error) {
-            set({
-                error: error.response?.data?.message || 'Failed to delete period',
-                isLoading: false
-            });
+            set({ error: error.message || 'Failed to delete period', isLoading: false });
             throw error;
         }
     },
 
-    // Open period
+    // Open period - POST /api/registration-phases/{id}/open
     openPeriod: async (id) => {
         set({ isLoading: true, error: null });
         try {
@@ -126,15 +123,12 @@ const usePeriodStore = create((set, get) => ({
             }));
             return updatedPeriod;
         } catch (error) {
-            set({
-                error: error.response?.data?.message || 'Failed to open period',
-                isLoading: false
-            });
+            set({ error: error.message || 'Failed to open period', isLoading: false });
             throw error;
         }
     },
 
-    // Close period
+    // Close period - POST /api/registration-phases/{id}/close
     closePeriod: async (id) => {
         set({ isLoading: true, error: null });
         try {
@@ -145,10 +139,7 @@ const usePeriodStore = create((set, get) => ({
             }));
             return updatedPeriod;
         } catch (error) {
-            set({
-                error: error.response?.data?.message || 'Failed to close period',
-                isLoading: false
-            });
+            set({ error: error.message || 'Failed to close period', isLoading: false });
             throw error;
         }
     },

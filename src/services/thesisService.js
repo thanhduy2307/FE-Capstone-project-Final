@@ -50,6 +50,38 @@ const thesisService = {
     },
 
     /**
+     * Student - Register new topic
+     * @param {Object} data - Student topic registration payload
+     * @returns {Promise} 
+     */
+    async createStudentThesis(data) {
+        try {
+            // Updated to be consistent with whether it uses /api/topics or /api/topics/student-register
+            // If the standard POST is /api/topics, it overlaps with CREATE. 
+            // We use the specific endpoint defined in API_ENDPOINTS.
+            const response = await axiosInstance.post(API_ENDPOINTS.THESIS.STUDENT_REGISTER, data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    /**
+     * Student - Resubmit a topic
+     * @param {string} parentTopicId - ID of the topic being resubmitted
+     * @param {Object} data - Resubmission payload
+     * @returns {Promise}
+     */
+    async resubmitStudentThesis(parentTopicId, data) {
+        try {
+            const response = await axiosInstance.post(API_ENDPOINTS.THESIS.STUDENT_RESUBMIT(parentTopicId), data);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    /**
      * Update thesis
      * @param {string} id - Thesis ID
      * @param {Object} data - Updated thesis data

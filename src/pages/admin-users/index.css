@@ -1,0 +1,676 @@
+.admin-users {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-content h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: hsl(220, 20%, 10%);
+    margin: 0 0 0.5rem 0;
+}
+
+.header-content p {
+    color: hsl(220, 10%, 50%);
+    margin: 0;
+}
+
+/* ---------- Filters ---------- */
+.filters-section {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 300px;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-box svg {
+    position: absolute;
+    left: 1rem;
+    color: hsl(220, 10%, 50%);
+}
+
+.search-box input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 3rem;
+    border: 2px solid hsl(220, 20%, 90%);
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: hsl(250, 84%, 54%);
+    box-shadow: 0 0 0 3px hsla(250, 84%, 54%, 0.1);
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    font-weight: 600;
+    color: hsl(220, 20%, 30%);
+    white-space: nowrap;
+}
+
+.filter-group select {
+    padding: 0.75rem 1rem;
+    border: 2px solid hsl(220, 20%, 90%);
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-group select:focus {
+    outline: none;
+    border-color: hsl(250, 84%, 54%);
+}
+
+/* ---------- Stats ---------- */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px hsla(220, 20%, 10%, 0.08);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px hsla(220, 20%, 10%, 0.12);
+}
+
+.stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: hsl(220, 20%, 10%);
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    color: hsl(220, 10%, 50%);
+    font-size: 0.9rem;
+}
+
+/* ---------- Loading / Error ---------- */
+.loading-container,
+.error-container {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px hsla(220, 20%, 10%, 0.08);
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid hsl(220, 20%, 90%);
+    border-top-color: hsl(250, 84%, 54%);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.error-container p {
+    color: hsl(0, 70%, 50%);
+    margin-bottom: 1rem;
+    font-size: 1.05rem;
+}
+
+/* ---------- Table ---------- */
+.users-table-container {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px hsla(220, 20%, 10%, 0.08);
+    overflow: hidden;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table thead {
+    background: linear-gradient(135deg, hsl(250, 84%, 54%) 0%, hsl(280, 70%, 60%) 100%);
+}
+
+.users-table th {
+    padding: 1rem;
+    text-align: left;
+    color: white;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.users-table tbody tr {
+    border-bottom: 1px solid hsl(220, 20%, 95%);
+    transition: all 0.2s ease;
+}
+
+.users-table tbody tr:hover {
+    background: hsl(250, 40%, 98%);
+}
+
+.users-table td {
+    padding: 0.9rem 1rem;
+    color: hsl(220, 20%, 30%);
+    font-size: 0.92rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem !important;
+    color: hsl(220, 10%, 55%) !important;
+    font-size: 1rem !important;
+}
+
+.user-id {
+    font-weight: 700;
+    color: hsl(250, 84%, 54%);
+    background: hsla(250, 84%, 54%, 0.08);
+    padding: 0.25rem 0.55rem;
+    border-radius: 0.3rem;
+    font-size: 0.85rem;
+}
+
+.user-name-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, hsl(250, 84%, 54%) 0%, hsl(280, 70%, 60%) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.user-fullname {
+    font-weight: 600;
+    color: hsl(220, 20%, 15%);
+}
+
+.user-student-code {
+    font-size: 0.8rem;
+    color: hsl(220, 10%, 55%);
+    margin-top: 2px;
+}
+
+.date-cell {
+    white-space: nowrap;
+    font-size: 0.85rem !important;
+    color: hsl(220, 10%, 55%) !important;
+}
+
+/* ---------- Role badges ---------- */
+.role-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+.role-admin {
+    background: linear-gradient(135deg, hsla(0, 80%, 55%, 0.15), hsla(330, 80%, 55%, 0.15));
+    color: hsl(350, 75%, 42%);
+}
+
+.role-student {
+    background: linear-gradient(135deg, hsla(210, 90%, 55%, 0.15), hsla(195, 90%, 55%, 0.15));
+    color: hsl(210, 80%, 42%);
+}
+
+.role-lecturer {
+    background: linear-gradient(135deg, hsla(140, 70%, 45%, 0.15), hsla(160, 70%, 45%, 0.15));
+    color: hsl(150, 65%, 32%);
+}
+
+.role-moderator {
+    background: linear-gradient(135deg, hsla(30, 90%, 55%, 0.15), hsla(45, 90%, 55%, 0.15));
+    color: hsl(30, 80%, 38%);
+}
+
+.role-reviewer {
+    background: linear-gradient(135deg, hsla(270, 70%, 55%, 0.15), hsla(290, 70%, 55%, 0.15));
+    color: hsl(275, 60%, 42%);
+}
+
+.role-coordinator {
+    background: linear-gradient(135deg, hsla(185, 80%, 45%, 0.15), hsla(200, 80%, 45%, 0.15));
+    color: hsl(190, 70%, 32%);
+}
+
+.role-supervisor {
+    background: linear-gradient(135deg, hsla(55, 80%, 45%, 0.15), hsla(70, 80%, 45%, 0.15));
+    color: hsl(60, 70%, 28%);
+}
+
+/* ---------- Action buttons ---------- */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-action {
+    padding: 0.5rem;
+    border: none;
+    border-radius: 0.4rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-action.view {
+    background: hsla(210, 100%, 50%, 0.1);
+    color: hsl(210, 100%, 45%);
+}
+
+.btn-action.view:hover {
+    background: hsla(210, 100%, 50%, 0.2);
+    transform: scale(1.1);
+}
+
+.btn-action.edit {
+    background: hsla(45, 100%, 50%, 0.1);
+    color: hsl(40, 90%, 40%);
+}
+
+.btn-action.edit:hover {
+    background: hsla(45, 100%, 50%, 0.22);
+    transform: scale(1.1);
+}
+
+
+/* ---------- Table Footer ---------- */
+.table-footer {
+    padding: 0.85rem 1rem;
+    border-top: 1px solid hsl(220, 20%, 93%);
+    font-size: 0.88rem;
+    color: hsl(220, 10%, 50%);
+}
+
+/* ---------- Modal ---------- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background: white;
+    border-radius: 1rem;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 2px solid hsl(220, 20%, 95%);
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: hsl(220, 20%, 10%);
+    font-size: 1.4rem;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    color: hsl(220, 10%, 50%);
+    transition: all 0.2s ease;
+    border-radius: 0.5rem;
+}
+
+.close-btn:hover {
+    background: hsl(220, 20%, 95%);
+    color: hsl(220, 20%, 10%);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-user-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid hsl(220, 20%, 95%);
+}
+
+.modal-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, hsl(250, 84%, 54%) 0%, hsl(280, 70%, 60%) 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.modal-user-header h3 {
+    margin: 0 0 0.35rem 0;
+    font-size: 1.2rem;
+    color: hsl(220, 20%, 10%);
+}
+
+.detail-row {
+    display: flex;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid hsl(220, 20%, 96%);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-row label {
+    flex: 0 0 160px;
+    font-weight: 600;
+    color: hsl(220, 20%, 35%);
+    font-size: 0.92rem;
+}
+
+.detail-row span {
+    flex: 1;
+    color: hsl(220, 20%, 15%);
+    font-size: 0.92rem;
+}
+
+/* ---------- Button Primary (for retry) ---------- */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, hsl(250, 84%, 54%) 0%, hsl(280, 70%, 60%) 100%);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px hsla(250, 84%, 54%, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px hsla(250, 84%, 54%, 0.4);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+    .admin-users {
+        padding: 1rem;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .filters-section {
+        flex-direction: column;
+    }
+
+    .search-box {
+        min-width: 100%;
+    }
+
+    .users-table-container {
+        overflow-x: auto;
+    }
+
+    .users-table th,
+    .users-table td {
+        padding: 0.65rem 0.75rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* ---------- Role Update Modal ---------- */
+.role-modal {
+    max-width: 440px;
+}
+
+.role-modal-email {
+    margin: 0.2rem 0 0;
+    font-size: 0.88rem;
+    color: hsl(220, 10%, 55%);
+}
+
+.role-update-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    background: hsl(220, 30%, 98%);
+    border-radius: 0.75rem;
+    border: 1px solid hsl(220, 20%, 92%);
+}
+
+.role-select-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: hsl(220, 20%, 40%);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.role-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid hsl(220, 20%, 88%);
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    color: hsl(220, 20%, 15%);
+    font-weight: 500;
+}
+
+.role-select:focus {
+    outline: none;
+    border-color: hsl(250, 84%, 54%);
+    box-shadow: 0 0 0 3px hsla(250, 84%, 54%, 0.12);
+}
+
+.role-select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.role-error {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: hsla(0, 80%, 55%, 0.1);
+    color: hsl(0, 70%, 42%);
+    border-radius: 0.5rem;
+    font-size: 0.88rem;
+    font-weight: 500;
+    border: 1px solid hsla(0, 80%, 55%, 0.2);
+    margin-top: 0.5rem;
+}
+
+.role-success {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: hsla(140, 70%, 45%, 0.1);
+    color: hsl(140, 65%, 32%);
+    border-radius: 0.5rem;
+    font-size: 0.88rem;
+    font-weight: 500;
+    border: 1px solid hsla(140, 70%, 45%, 0.2);
+    margin-top: 0.5rem;
+}
+
+.role-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.btn-cancel {
+    padding: 0.65rem 1.25rem;
+    background: hsl(220, 20%, 94%);
+    color: hsl(220, 20%, 35%);
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.92rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-cancel:hover:not(:disabled) {
+    background: hsl(220, 20%, 88%);
+}
+
+.btn-cancel:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-update-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.65rem 1.35rem;
+    background: linear-gradient(135deg, hsl(250, 84%, 54%) 0%, hsl(280, 70%, 60%) 100%);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    font-size: 0.92rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 12px hsla(250, 84%, 54%, 0.3);
+}
+
+.btn-update-role:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px hsla(250, 84%, 54%, 0.4);
+}
+
+.btn-update-role:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+

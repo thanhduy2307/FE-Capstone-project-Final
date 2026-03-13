@@ -8,12 +8,17 @@ import Input from '../../components/Input.jsx';
 import useAuthStore from '../../stores/authStore.js';
 import useSemesterStore from '../../stores/semesterStore.js';
 import usePeriodStore from '../../stores/periodStore.js';
+import { showSuccess, showError, showWarning, showConfirm, showDeleteConfirm } from '../../utils/alert.js';
 import './admin-dashboard.css';
 
 const AdminDashboard = () => {
   const { user } = useAuthStore();
-  const { semesters, activeSemester, fetchSemesters, fetchActiveSemester, createSemester, activateSemester } = useSemesterStore();
-  const { periods, fetchPeriods, createPeriod } = usePeriodStore();
+  const { semesters, activeSemester, fetchSemesters, createSemester, activateSemester, deleteSemester } = useSemesterStore();
+  const { createPeriod } = usePeriodStore();
+
+  // Derive active semester and periods directly from semesters array (always reactive)
+  const activeSemesterData = semesters.find(s => s.isActive) || activeSemester || null;
+  const periods = activeSemesterData?.registrationPhases || [];
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -40,11 +45,8 @@ const AdminDashboard = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
+      // fetchSemesters already detects activeSemester + registrationPhases
       await fetchSemesters();
-      const active = await fetchActiveSemester();
-      if (active) {
-        await fetchPeriods(active.id);
-      }
     } catch (err) {
       console.error('Failed to load data:', err);
     }
@@ -52,41 +54,71 @@ const AdminDashboard = () => {
   };
 
   const handleCreateSemester = async () => {
+    const { code, name, startDate, endDate } = semesterForm;
+    if (!code.trim() || !name.trim() || !startDate || !endDate) {
+      showWarning('Vui lòng điền đầy đủ thông tin học kỳ!');
+      return;
+    }
+    if (new Date(endDate) <= new Date(startDate)) {
+      showWarning('Ngày kết thúc phải sau ngày bắt đầu!');
+      return;
+    }
     try {
       await createSemester(semesterForm);
       setIsSemesterModalOpen(false);
       setSemesterForm({ code: '', name: '', startDate: '', endDate: '' });
       await fetchSemesters();
+      showSuccess('Tạo học kỳ thành công!');
     } catch (err) {
       console.error('Failed to create semester:', err);
-      alert('Tạo học kỳ thất bại!');
+      showError(err?.message || 'Tạo học kỳ thất bại!');
     }
   };
 
   const handleActivateSemester = async (id) => {
-    if (window.confirm('Bạn có chắc muốn kích hoạt học kỳ này? Học kỳ hiện tại sẽ bị vô hiệu hóa.')) {
+    const confirmed = await showConfirm(
+      'Kích hoạt học kỳ?',
+      'Bạn có chắc muốn kích hoạt học kỳ này? Học kỳ hiện tại sẽ bị vô hiệu hóa.',
+      'Kích hoạt'
+    );
+    if (confirmed) {
       try {
-        await activateSemester(id);
-        await loadData();
+        await activateSemester(id); // PUT /api/semesters/{id}/activate — store auto re-fetches
+        showSuccess('Kích hoạt học kỳ thành công!');
       } catch (err) {
         console.error('Failed to activate semester:', err);
+        showError(err?.message || 'Kích hoạt học kỳ thất bại!');
+      }
+    }
+  };
+
+  const handleDeleteSemester = async (id, name) => {
+    const confirmed = await showDeleteConfirm(`học kỳ "${name}"`);
+    if (confirmed) {
+      try {
+        await deleteSemester(id); // DELETE /api/semesters/{id}
+        showSuccess('Xóa học kỳ thành công!');
+      } catch (err) {
+        console.error('Failed to delete semester:', err);
+        showError(err?.message || 'Xóa học kỳ thất bại!');
       }
     }
   };
 
   const handleCreatePeriod = async () => {
-    if (!activeSemester) {
-      alert('Vui lòng kích hoạt một Học kỳ trước!');
+    if (!activeSemesterData) {
+      showWarning('Vui lòng kích hoạt một Học kỳ trước!');
       return;
     }
     try {
-      await createPeriod({ ...periodForm, semesterId: activeSemester.id });
+      await createPeriod({ ...periodForm, semesterId: activeSemesterData.id });
       setIsPeriodModalOpen(false);
       setPeriodForm({ name: '', startDate: '', endDate: '' });
-      await fetchPeriods(activeSemester.id);
+      await fetchSemesters(); // refresh embedded registrationPhases
+      showSuccess('Tạo đợt đăng ký thành công!');
     } catch (err) {
       console.error('Failed to create period:', err);
-      alert('Tạo đợt đăng ký thất bại!');
+      showError('Tạo đợt đăng ký thất bại!');
     }
   };
 
@@ -120,12 +152,12 @@ const AdminDashboard = () => {
             </div>
 
             {/* Active Semester highlight */}
-            {activeSemester && (
+            {activeSemesterData && (
               <div className="active-semester-banner">
                 <div className="banner-info">
                   <span className="banner-label">Học kỳ đang hoạt động:</span>
-                  <strong>{activeSemester.name}</strong>
-                  <span className="banner-code">({activeSemester.code})</span>
+                  <strong>{activeSemesterData.name}</strong>
+                  <span className="banner-code">({activeSemesterData.code})</span>
                 </div>
                 <Badge variant="success">ACTIVE</Badge>
               </div>
@@ -160,11 +192,18 @@ const AdminDashboard = () => {
                           </Badge>
                         </td>
                         <td>
-                          {!sem.isActive && (
-                            <Button size="sm" variant="outline" onClick={() => handleActivateSemester(sem.id)}>
-                              Kích hoạt
-                            </Button>
-                          )}
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            {!sem.isActive && (
+                              <Button size="sm" variant="outline" onClick={() => handleActivateSemester(sem.id)}>
+                                Kích hoạt
+                              </Button>
+                            )}
+                            {!sem.isActive && (
+                              <Button size="sm" variant="danger" onClick={() => handleDeleteSemester(sem.id, sem.name)}>
+                                Xóa
+                              </Button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -193,11 +232,11 @@ const AdminDashboard = () => {
                 <h2 className="step-title">⏰ Thiết lập Đợt Đăng ký (Timeline)</h2>
                 <p className="step-description">
                   Cấu hình các đợt nộp đề tài / đăng ký cho học kỳ đang hoạt động.
-                  {!activeSemester && <span style={{ color: '#f59e0b' }}> (Vui lòng kích hoạt Học kỳ ở Bước 1 trước)</span>}
+                  {!activeSemesterData && <span style={{ color: '#f59e0b' }}> (Vui lòng kích hoạt Học kỳ ở Bước 1 trước)</span>}
                 </p>
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
-                <Button variant="primary" size="md" onClick={() => setIsPeriodModalOpen(true)} disabled={!activeSemester}>
+                <Button variant="primary" size="md" onClick={() => setIsPeriodModalOpen(true)} disabled={!activeSemesterData}>
                   + Tạo Đợt mới
                 </Button>
                 <Link to="/admin/periods">
@@ -208,7 +247,7 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            {activeSemester ? (
+            {activeSemesterData ? (
               <div className="period-list-dashboard">
                 {periods && periods.length > 0 ? (
                   <table className="dashboard-table">
@@ -227,8 +266,8 @@ const AdminDashboard = () => {
                           <td>{new Date(period.startDate).toLocaleDateString('vi-VN')}</td>
                           <td>{new Date(period.endDate).toLocaleDateString('vi-VN')}</td>
                           <td>
-                            <Badge variant={period.isOpen ? 'success' : 'error'}>
-                              {period.isOpen ? 'OPEN' : 'CLOSED'}
+                            <Badge variant={period.status === 'OPEN' ? 'success' : 'error'}>
+                              {period.status === 'OPEN' ? 'OPEN' : 'CLOSED'}
                             </Badge>
                           </td>
                         </tr>
@@ -251,7 +290,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* ========== STEP 3: Account Management ========== */}
-      <div className="workflow-step">
+      {/* <div className="workflow-step">
         <div className="step-indicator">
           <span className="step-number">3</span>
         </div>
@@ -291,7 +330,7 @@ const AdminDashboard = () => {
             </div>
           </Card>
         </div>
-      </div>
+      </div> */}
 
       {/* ========== MODALS ========== */}
 
@@ -352,7 +391,7 @@ const AdminDashboard = () => {
       <Modal
         isOpen={isPeriodModalOpen}
         onClose={() => setIsPeriodModalOpen(false)}
-        title={`Tạo Đợt đăng ký mới (${activeSemester?.name || ''})`}
+        title={`Tạo Đợt đăng ký mới (${activeSemesterData?.name || ''})`}
         size="md"
         footer={
           <>
