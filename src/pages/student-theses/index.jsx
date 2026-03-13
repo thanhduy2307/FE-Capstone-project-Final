@@ -8,7 +8,7 @@ import useSemesterStore from '../../stores/semesterStore.js';
 import usePeriodStore from '../../stores/periodStore.js';
 import thesisService from '../../services/thesisService.js';
 import { showSuccess, showError, showWarning } from '../../utils/alert.js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './student-theses.css';
 
 const StudentTheses = () => {
@@ -16,7 +16,12 @@ const StudentTheses = () => {
   const { activeSemester, fetchActiveSemester } = useSemesterStore();
   const { periods: openPeriods, fetchOpenPeriods } = usePeriodStore();
   const navigate = useNavigate();
+  const location = useLocation();
   
+  // Local state
+  const [isLoadingPeriods, setIsLoadingPeriods] = useState(true);
+  const [thesisDetail, setThesisDetail] = useState(null);
+
   // views: 'periods' | 'register'
   const [currentView, setCurrentView] = useState('periods');
   const [formMode, setFormMode] = useState('register'); // 'register' | 'edit' | 'resubmit'
@@ -39,6 +44,35 @@ const StudentTheses = () => {
   useEffect(() => {
     loadSemesterData();
   }, []);
+
+  // Handle Edit / Resubmit from My Thesis page
+  useEffect(() => {
+    if (location.state && location.state.thesisDetail) {
+      const { thesisDetail: incomingThesis, mode } = location.state;
+      setThesisDetail(incomingThesis);
+      setFormMode(mode || 'edit');
+      setCurrentView('register');
+      
+      setFormData({
+        registrationPhaseId: incomingThesis.registrationPhaseId || '',
+        titleEn: incomingThesis.titleEn || '',
+        titleVi: incomingThesis.titleVi || '',
+        description: incomingThesis.description || '',
+        department: incomingThesis.department || '',
+      });
+      
+      if (incomingThesis.studentGroupInfo) {
+        try {
+          const parsed = JSON.parse(incomingThesis.studentGroupInfo);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setStudentsList(parsed);
+          }
+        } catch (e) {
+          console.warn('Failed to parse existing student group info', e);
+        }
+      }
+    }
+  }, [location.state]);
 
   const loadSemesterData = async () => {
     setIsLoadingPeriods(true);
@@ -129,7 +163,6 @@ const StudentTheses = () => {
   };
 
   const handleEditClick = () => {
-    // Thesis info is passed from my-thesis if needed, but here we just show the form
     setFormMode('edit');
     setCurrentView('register');
   };
