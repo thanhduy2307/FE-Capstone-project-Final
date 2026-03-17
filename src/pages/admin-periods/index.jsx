@@ -188,9 +188,9 @@ const AdminPeriods = () => {
       label: 'Thao tác',
       render: (_, row) => (
         <div className="action-buttons">
-          <button className="action-btn edit-btn" onClick={() => handleEdit(row)}>
+          {/* <button className="action-btn edit-btn" onClick={() => handleEdit(row)}>
             Sửa
-          </button>
+          </button> */}
           {row.status?.toUpperCase() === 'CLOSED' && (
             <button className="action-btn open-btn" onClick={() => handleOpen(row.id)}>
               Mở

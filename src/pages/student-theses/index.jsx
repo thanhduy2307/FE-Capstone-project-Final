@@ -21,10 +21,11 @@ const StudentTheses = () => {
   // Local state
   const [isLoadingPeriods, setIsLoadingPeriods] = useState(true);
   const [thesisDetail, setThesisDetail] = useState(null);
+  const [submittedPhaseIds, setSubmittedPhaseIds] = useState([]);
 
   // views: 'periods' | 'register'
   const [currentView, setCurrentView] = useState('periods');
-  const [formMode, setFormMode] = useState('register'); // 'register' | 'edit' | 'resubmit'
+  const [formMode, setFormMode] = useState('register'); // 'register' | 'edit'
 
   // Form state
   const [formData, setFormData] = useState({
@@ -43,7 +44,25 @@ const StudentTheses = () => {
 
   useEffect(() => {
     loadSemesterData();
-  }, []);
+    if (user?.id) {
+      loadUserTheses();
+    }
+  }, [user?.id]);
+
+  const loadUserTheses = async () => {
+    try {
+      const topics = await thesisService.getTopicsBySubmitter(user.id);
+      if (topics && Array.isArray(topics)) {
+        const phaseIds = topics.map(t => {
+          const id = t.registrationPhase?.id || t.registrationPhaseId;
+          return id ? String(id) : null;
+        }).filter(Boolean);
+        setSubmittedPhaseIds(phaseIds);
+      }
+    } catch (error) {
+      console.error('Failed to load user theses', error);
+    }
+  };
 
   // Handle Edit / Resubmit from My Thesis page
   useEffect(() => {
@@ -124,6 +143,11 @@ const StudentTheses = () => {
       return;
     }
 
+    if (formMode !== 'edit' && submittedPhaseIds.includes(String(formData.registrationPhaseId))) {
+      showWarning('Bạn đã từng nộp đề tài trong đợt này rồi (kể cả đã bị từ chối), vui lòng chọn đợt khác.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       // Auto-format studentsList into JSON string
@@ -138,7 +162,9 @@ const StudentTheses = () => {
         description: formData.description,
         department: formData.department,
         studentGroupInfo: formattedGroupInfo,
-        studentCount: studentsList.length
+        studentCount: studentsList.length,
+        submitterId: user?.id,
+        submitter: { id: user?.id } // Thêm cả object nếu backend query theo object
       };
 
       if (formMode === 'edit' && thesisDetail) {
@@ -146,11 +172,6 @@ const StudentTheses = () => {
         const updatedId = updated?.id || thesisDetail.id;
         localStorage.setItem('myTopicId', updatedId);
         showSuccess('Cập nhật đề tài thành công!');
-      } else if (formMode === 'resubmit' && thesisDetail) {
-        const resubmitted = await thesisService.resubmitStudentThesis(thesisDetail.id, payload);
-        const resubmittedId = resubmitted?.id || thesisDetail.id;
-        localStorage.setItem('myTopicId', resubmittedId);
-        showSuccess('Nộp lại đề tài thành công!');
       } else {
         const created = await thesisService.createStudentThesis(payload);
         if (created?.id) {
@@ -174,11 +195,6 @@ const StudentTheses = () => {
     setCurrentView('register');
   };
 
-  const handleResubmitClick = () => {
-    setFormMode('resubmit');
-    setCurrentView('register');
-  };
-
   const handleCancelForm = () => {
     setCurrentView('periods');
     // Reset form
@@ -192,44 +208,63 @@ const StudentTheses = () => {
     setStudentsList([{ name: '', code: '' }]);
   };
 
-  const renderPeriodsView = () => (
-    <div>
-      <h3 style={{marginBottom: '20px'}}>Thông tin Đợt Đăng ký Đề tài</h3>
-      {isLoadingPeriods ? (
-        <p>Đang tải thông tin đợt đăng ký...</p>
-      ) : openPeriods && openPeriods.length > 0 ? (
-        <div>
-          <div style={{ marginBottom: '20px' }}>
-            <p style={{ marginBottom: '10px' }}>Các đợt đang mở trong học kỳ này:</p>
-            <ul style={{ paddingLeft: '20px', lineHeight: '1.8' }}>
-              {openPeriods.map(p => (
-                <li key={p.id}>
-                  <strong>{p.name}</strong> 
-                  <span style={{ fontSize: '14px', color: 'var(--text-secondary)', marginLeft: '10px' }}>
-                    (Hạn nộp: {new Date(p.endDate).toLocaleDateString('vi-VN')})
-                  </span>
-                </li>
-              ))}
-            </ul>
+  const renderPeriodsView = () => {
+    const availablePeriods = openPeriods.filter(p => !submittedPhaseIds.includes(String(p.id)));
+    const hasAnyOpen = openPeriods && openPeriods.length > 0;
+    
+    return (
+      <div>
+        <h3 style={{marginBottom: '20px'}}>Thông tin Đợt Đăng ký Đề tài</h3>
+        {isLoadingPeriods ? (
+          <p>Đang tải thông tin đợt đăng ký...</p>
+        ) : hasAnyOpen ? (
+          <div>
+            <div style={{ marginBottom: '20px' }}>
+              <p style={{ marginBottom: '10px' }}>Các đợt đang mở trong học kỳ này:</p>
+              <ul style={{ paddingLeft: '20px', lineHeight: '1.8' }}>
+                {openPeriods.map(p => (
+                  <li key={p.id}>
+                    <strong>{p.name}</strong> 
+                    <span style={{ fontSize: '14px', color: 'var(--text-secondary)', marginLeft: '10px' }}>
+                      (Hạn nộp: {new Date(p.endDate).toLocaleDateString('vi-VN')})
+                    </span>
+                    {submittedPhaseIds.includes(String(p.id)) && (
+                      <span style={{ fontSize: '12px', color: 'var(--text-danger)', marginLeft: '10px', fontStyle: 'italic' }}>
+                        *Bạn đã đăng ký đợt này
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <Button 
+              variant="primary" 
+              onClick={() => {
+                if (availablePeriods.length === 0) {
+                  showWarning('Bạn đã đăng ký hết tất cả các đợt đang mở hiện tại, không thể nộp thêm.');
+                } else {
+                  setCurrentView('register');
+                }
+              }}
+            >
+              Tiến hành Đăng ký Đề tài Mới
+            </Button>
           </div>
-          <Button variant="primary" onClick={() => setCurrentView('register')}>
-            Tiến hành Đăng ký Đề tài Mới
-          </Button>
-        </div>
-      ) : (
-        <div style={{ padding: '20px', background: 'var(--bg-secondary)', borderRadius: '8px', textAlign: 'center' }}>
-            <p style={{ color: 'var(--text-secondary)' }}>Hiện tại không có đợt đăng ký đề tài nào đang mở trong học kỳ này.</p>
-        </div>
-      )}
-    </div>
-  );
+        ) : (
+          <div style={{ padding: '20px', background: 'var(--bg-secondary)', borderRadius: '8px', textAlign: 'center' }}>
+              <p style={{ color: 'var(--text-secondary)' }}>Hiện tại không có đợt đăng ký đề tài nào đang mở trong học kỳ này.</p>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderRegisterView = () => (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px', gap: '15px' }}>
         <Button variant="secondary" onClick={handleCancelForm}>Trở lại</Button>
         <h3 style={{ margin: 0 }}>
-          {formMode === 'edit' ? 'Cập nhật Đề Tài' : formMode === 'resubmit' ? 'Nộp Lại Đề Tài' : 'Đăng ký Đề Tài Mới'}
+          {formMode === 'edit' ? 'Cập nhật Đề Tài' : 'Đăng ký Đề Tài Mới'}
         </h3>
       </div>
       <form onSubmit={handleRegisterSubmit}>
@@ -241,7 +276,9 @@ const StudentTheses = () => {
             onChange={handleInputChange}
             style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'var(--bg-card)', color: 'var(--text-primary)', marginTop: '8px' }} required>
             <option value="">-- Chọn đợt nộp --</option>
-            {openPeriods.map(p => (
+            {openPeriods
+              .filter(p => formMode === 'edit' ? true : !submittedPhaseIds.includes(String(p.id)))
+              .map(p => (
               <option key={p.id} value={p.id}>{p.name} (Hạn: {new Date(p.endDate).toLocaleDateString('vi-VN')})</option>
             ))}
           </select>
@@ -327,7 +364,7 @@ const StudentTheses = () => {
         </div>
         <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
           <Button type="submit" variant="primary" disabled={isSubmitting}>
-            {isSubmitting ? 'Đang xử lý...' : (formMode === 'edit' ? 'Cập nhật' : formMode === 'resubmit' ? 'Nộp Lại' : 'Nộp Đề Tài')}
+            {isSubmitting ? 'Đang xử lý...' : (formMode === 'edit' ? 'Cập nhật' : 'Nộp Đề Tài')}
           </Button>
           <Button type="button" variant="secondary" onClick={handleCancelForm} disabled={isSubmitting}>Hủy</Button>
         </div>
