@@ -1,7 +1,11 @@
 import api from '../utils/axios.js';
 
 const moderatorService = {
-    // Get all relevant topics (working around backend enum crash by fetching specific statuses)
+    // =============================================
+    // TOPIC QUERIES
+    // =============================================
+
+    // Get all relevant topics (by status)
     getAllTopics: async () => {
         try {
             const [pending, inReview, needThird, consider] = await Promise.all([
@@ -10,55 +14,133 @@ const moderatorService = {
                 api.get('/api/topics/status/NEED_THIRD_REVIEWER').catch(() => ({ data: [] })),
                 api.get('/api/topics/status/CONSIDER').catch(() => ({ data: [] }))
             ]);
-            
-            // Combine all valid statuses that a Moderator cares about
             return [
-                ...(Array.isArray(pending.data) ? pending.data : []),
-                ...(Array.isArray(inReview.data) ? inReview.data : []),
+                ...(Array.isArray(pending.data)   ? pending.data   : []),
+                ...(Array.isArray(inReview.data)  ? inReview.data  : []),
                 ...(Array.isArray(needThird.data) ? needThird.data : []),
-                ...(Array.isArray(consider.data) ? consider.data : [])
+                ...(Array.isArray(consider.data)  ? consider.data  : [])
             ];
         } catch (error) {
-            console.error("Error fetching grouped topics", error);
+            console.error('Error fetching grouped topics', error);
             return [];
         }
     },
 
-    // Get topics that specifically need a 3rd reviewer
-    getTopicsNeedThirdReviewer: async () => {
-        const response = await api.get('/api/topic-reviewers/need-third-reviewer');
-        return response.data;
-    },
-
-    // Get thesis details
+    // GET /api/topics/{id} — chi tiết đề tài
     getThesisDetail: async (id) => {
         const response = await api.get(`/api/topics/${id}`);
         return response.data;
     },
 
-    // Assign reviewers (R1 & R2) - POST /api/topics/{id}/assign-reviewers
+    // GET /api/topics — tất cả đề tài (all roles)
+    getAllTopicsFlat: async () => {
+        const response = await api.get('/api/topics');
+        return response.data;
+    },
+
+    // GET /api/topics/{id}/inheritance — lịch sử kế thừa/nộp lại
+    getTopicInheritance: async (id) => {
+        const response = await api.get(`/api/topics/${id}/inheritance`);
+        return response.data;
+    },
+
+    // GET /api/topics/supervisor/{supervisorId} — đề tài của một GV
+    getTopicsBySupervisor: async (supervisorId) => {
+        const response = await api.get(`/api/topics/supervisor/${supervisorId}`);
+        return response.data;
+    },
+
+    // GET /api/topics/status/{status} — lọc theo trạng thái
+    getTopicsByStatus: async (status) => {
+        const response = await api.get(`/api/topics/status/${status}`);
+        return response.data;
+    },
+
+    // GET /api/topics/semester/{semesterId} — lọc theo học kỳ
+    getTopicsBySemester: async (semesterId) => {
+        const response = await api.get(`/api/topics/semester/${semesterId}`);
+        return response.data;
+    },
+
+    // =============================================
+    // ASSIGN REVIEWERS — two equivalent endpoints
+    // =============================================
+
+    // POST /api/topic-reviewers/assign/{topicId}  (primary)
     assignReviewers: async (topicId, reviewerIds) => {
-        // reviewerIds is an array of exactly 2 IDs: [r1id, r2id]
-        const response = await api.post(`/api/topics/${topicId}/assign-reviewers`, {
-            reviewer1Id: reviewerIds[0],
-            reviewer2Id: reviewerIds[1]
-        });
+        const response = await api.post(`/api/topic-reviewers/assign/${topicId}`, { reviewerIds });
         return response.data;
     },
 
-    // Assign 3rd reviewer - POST /api/topic-reviewers/assign-third/{topicId}
+    // POST /api/topics/{id}/assign-reviewers  (alt / fallback)
+    assignReviewersAlt: async (topicId, reviewerIds) => {
+        const response = await api.post(`/api/topics/${topicId}/assign-reviewers`, { reviewerIds });
+        return response.data;
+    },
+
+    // =============================================
+    // ASSIGN THIRD REVIEWER — two equivalent endpoints
+    // =============================================
+
+    // POST /api/topic-reviewers/assign-third/{topicId}  (primary)
     assignThirdReviewer: async (topicId, reviewerId) => {
-        const response = await api.post(`/api/topic-reviewers/assign-third/${topicId}`, {
-            reviewerId
-        });
+        const response = await api.post(`/api/topic-reviewers/assign-third/${topicId}`, { reviewerId });
         return response.data;
     },
 
-    // Get available reviewers (Lecturers)
+    // POST /api/topics/{id}/assign-third-reviewer  (alt / fallback)
+    assignThirdReviewerAlt: async (topicId, reviewerId) => {
+        const response = await api.post(`/api/topics/${topicId}/assign-third-reviewer`, { reviewerId });
+        return response.data;
+    },
+
+    // =============================================
+    // FINALIZE
+    // =============================================
+
+    // POST /api/topics/{id}/finalize  — Chốt đề tài FINALIZED
+    finalizeTopic: async (topicId) => {
+        const response = await api.post(`/api/topics/${topicId}/finalize`);
+        return response.data;
+    },
+
+    // =============================================
+    // TOPIC-REVIEWERS QUERIES
+    // =============================================
+
+    // GET /api/topic-reviewers/need-third-reviewer
+    getTopicsNeedThirdReviewer: async () => {
+        const response = await api.get('/api/topic-reviewers/need-third-reviewer');
+        return response.data;
+    },
+
+    // GET /api/topic-reviewers/topic/{topicId}
+    getTopicReviewers: async (topicId) => {
+        const response = await api.get(`/api/topic-reviewers/topic/${topicId}`);
+        return response.data;
+    },
+
+    // GET /api/topic-reviewers/{id}
+    getReviewAssignmentDetail: async (id) => {
+        const response = await api.get(`/api/topic-reviewers/${id}`);
+        return response.data;
+    },
+
+    // GET /api/topic-reviewers/stats/{semesterId}
+    getReviewerStats: async (semesterId) => {
+        const response = await api.get(`/api/topic-reviewers/stats/${semesterId}`);
+        return response.data;
+    },
+
+    // =============================================
+    // HELPERS
+    // =============================================
+
+    // GET all lecturers (for reviewer picker)
     getAvailableReviewers: async () => {
         const response = await api.get('/api/auth/users/role/LECTURER');
         return response.data;
-    }
+    },
 };
 
 export default moderatorService;

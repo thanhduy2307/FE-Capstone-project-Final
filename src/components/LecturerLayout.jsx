@@ -30,25 +30,32 @@ const LecturerLayout = () => {
         </div>
 
         <div className="navbar-menu">
-          <Link to="/lecturer/theses" className="nav-link">
+          <Link to="/lecturer/dashboard" className="nav-link">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
+              <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
             </svg>
-            Đề Tài Đăng Ký (Registration)
+            Tổng Quan (Dashboard)
           </Link>
           <Link to="/lecturer/reviews" className="nav-link">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            Phản Biện (Reviewer)
+            Chấm Đề Tài (Pending)
           </Link>
           <Link to="/lecturer/history" className="nav-link">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
-            Lịch Sử Đánh Giá (History)
+            Lịch Sử Đánh Giá
+          </Link>
+          <Link to="/lecturer/all-theses" className="nav-link">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+            Tra Cứu Đề Tài
           </Link>
         </div>
 
@@ -58,8 +65,8 @@ const LecturerLayout = () => {
               {user?.name?.charAt(0).toUpperCase() || 'L'}
             </div>
             <div className="user-details">
-              <div className="user-name">{user?.name || 'Giảng viên'}</div>
-              <div className="user-role">Hội đồng & Hướng dẫn</div>
+              <div className="user-name">{user?.fullName || user?.name || 'Giảng viên'}</div>
+              <div className="user-role">Hội đồng Phản biện</div>
             </div>
           </div>
           <button className="logout-btn" onClick={handleLogout}>

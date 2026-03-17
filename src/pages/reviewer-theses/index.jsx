@@ -1,384 +1,290 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Card from '../../components/Card.jsx';
 import Badge from '../../components/Badge.jsx';
 import Button from '../../components/Button.jsx';
 import Modal from '../../components/Modal.jsx';
-import Table from '../../components/Table.jsx';
-import useReviewerStore from '../../stores/reviewerStore.js';
-import { showSuccess, showError, showWarning, showInfo } from '../../utils/alert.js';
+import useAuthStore from '../../stores/authStore.js';
+import lecturerService from '../../services/lecturerService.js';
+import { showError } from '../../utils/alert.js';
+import api from '../../utils/axios.js';
 import './reviewer-theses.css';
+import '../lecturer-theses/lecturer-theses.css';
+
+const STATUS_META = {
+  PENDING:             { label: 'Chờ xét duyệt', variant: 'warning' },
+  IN_REVIEW:           { label: 'Đang xét',       variant: 'info'    },
+  NEED_THIRD_REVIEWER: { label: 'Cần GV3 ⚠️',     variant: 'error'   },
+  CONSIDER:            { label: 'Xem xét thêm',   variant: 'warning' },
+  PASS:                { label: 'Đã duyệt ✅',     variant: 'success' },
+  FAIL:                { label: 'Không đạt ❌',    variant: 'error'   },
+  FINALIZED:           { label: 'Đã kết thúc 🏁', variant: 'default' },
+  APPROVED:            { label: 'Đạt ✅',          variant: 'success' },
+  REJECTED:            { label: 'Không đạt ❌',    variant: 'error'   },
+};
 
 const ReviewerTheses = () => {
-  const { submitReview } = useReviewerStore();
-  
-  const [selectedThesis, setSelectedThesis] = useState(null);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [reviewDecision, setReviewDecision] = useState(null);
-  const [reviewComment, setReviewComment] = useState('');
+  const { user } = useAuthStore();
 
-  // Mock data
-  const theses = [
-    {
-      id: 1,
-      code: 'DT2024001',
-      title: 'Ứng dụng Machine Learning trong phân tích dữ liệu',
-      studentName: 'Nguyễn Văn A',
-      studentCode: 'SV001',
-      assignedDate: '2024-01-30',
-      status: 'pending_review',
-      myReview: null,
-      reviewers: [
-        { id: 1, name: 'TS. Trần Văn X', decision: null },
-        { id: 2, name: 'PGS.TS. Lê Thị Y', decision: null },
-      ],
-      fileName: 'detai_SV001.pdf',
-    },
-    {
-      id: 2,
-      code: 'DT2024002',
-      title: 'Xây dựng hệ thống quản lý bằng Blockchain',
-      studentName: 'Lê Thị C',
-      studentCode: 'SV002',
-      assignedDate: '2024-01-29',
-      status: 'reviewed',
-      myReview: 'approve',
-      reviewers: [
-        { id: 1, name: 'TS. Trần Văn X', decision: 'approve', isMe: true },
-        { id: 2, name: 'PGS.TS. Lê Thị Y', decision: 'approve' },
-      ],
-      fileName: 'detai_SV002.docx',
-      result: 'passed',
-    },
-    {
-      id: 3,
-      code: 'DT2024003',
-      title: 'Phát triển ứng dụng IoT cho Smart Home',
-      studentName: 'Hoàng Văn E',
-      studentCode: 'SV003',
-      assignedDate: '2024-01-28',
-      status: 'conflict',
-      myReview: 'approve',
-      reviewers: [
-        { id: 1, name: 'TS. Trần Văn X', decision: 'approve', isMe: true },
-        { id: 2, name: 'PGS.TS. Lê Thị Y', decision: 'reject' },
-        { id: 3, name: 'TS. Võ Văn Z', decision: null, isTieBreaker: true },
-      ],
-      fileName: 'detai_SV003.pdf',
-      needsTieBreaker: true,
-    },
-  ];
+  const [semesters, setSemesters] = useState([]);
+  const [selectedSemesterId, setSelectedSemesterId] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [allTopics, setAllTopics] = useState([]);
+  const [searchText, setSearchText] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleViewDetail = (thesis) => {
-    setSelectedThesis(thesis);
-    setIsDetailModalOpen(true);
-  };
+  // Detail modal
+  const [selectedTopic, setSelectedTopic] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [topicReviewers, setTopicReviewers] = useState([]);
+  const [isReviewerLoading, setIsReviewerLoading] = useState(false);
 
-  const handleOpenReview = (thesis) => {
-    setSelectedThesis(thesis);
-    setReviewDecision(null);
-    setReviewComment('');
-    setIsReviewModalOpen(true);
-  };
+  useEffect(() => { fetchSemesters(); }, []);
+  useEffect(() => { if (selectedSemesterId) fetchTopics(); }, [selectedSemesterId]);
 
-  const handleSubmitReview = async () => {
-    if (!reviewDecision) {
-      showWarning('Vui lòng chọn quyết định!');
-      return;
-    }
-
+  const fetchSemesters = async () => {
     try {
-      // await submitReview(selectedThesis.id, {
-      //   decision: reviewDecision,
-      //   comment: reviewComment,
-      // });
-      
-      showSuccess(`Đã gửi review: ${reviewDecision === 'approve' ? 'APPROVE ✅' : 'REJECT ❌'}`);
-      setIsReviewModalOpen(false);
-    } catch (error) {
-      showError('Gửi review thất bại!');
+      const res = await api.get('/api/semesters');
+      const list = Array.isArray(res.data) ? res.data : [];
+      setSemesters(list);
+      const active = list.find(s => s.isActive) || list[0];
+      if (active) setSelectedSemesterId(String(active.id));
+    } catch (e) {
+      console.error('Error fetching semesters', e);
     }
   };
 
-  const handleDownloadFile = (thesis) => {
-    showInfo(`Đang tải file: ${thesis.fileName}`);
-  };
-
-  const getStatusVariant = (status) => {
-    switch (status) {
-      case 'pending_review':
-        return 'warning';
-      case 'reviewed':
-        return 'success';
-      case 'waiting_other':
-        return 'info';
-      case 'conflict':
-        return 'error';
-      default:
-        return 'default';
+  const fetchTopics = async () => {
+    setIsLoading(true);
+    try {
+      let data;
+      if (selectedSemesterId) {
+        data = await lecturerService.getTopicsBySemester(selectedSemesterId);
+      } else {
+        data = await lecturerService.getAllTopics();
+      }
+      setAllTopics(Array.isArray(data) ? data : (data?.data || []));
+    } catch (e) {
+      try {
+        const data = await lecturerService.getAllTopics();
+        setAllTopics(Array.isArray(data) ? data : []);
+      } catch {
+        showError('Không thể tải danh sách đề tài.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'pending_review':
-        return 'Chờ review';
-      case 'reviewed':
-        return 'Đã review';
-      case 'waiting_other':
-        return 'Chờ reviewer khác';
-      case 'conflict':
-        return 'Cần reviewer 3';
-      default:
-        return status;
+  const handleViewDetail = async (topic) => {
+    setSelectedTopic(topic);
+    setIsDetailOpen(true);
+    setIsReviewerLoading(true);
+    setTopicReviewers([]);
+    try {
+      const detail = await lecturerService.getThesisDetail(topic.id);
+      setSelectedTopic(detail);
+      const rvRes = await api.get(`/api/topic-reviewers/topic/${topic.id}`).catch(() => ({ data: [] }));
+      setTopicReviewers(Array.isArray(rvRes.data) ? rvRes.data : []);
+    } catch (e) {
+      console.error('Error fetching topic detail', e);
+    } finally {
+      setIsReviewerLoading(false);
     }
   };
 
-  const columns = [
-    {
-      key: 'code',
-      label: 'Mã ĐT',
-      sortable: true,
-    },
-    {
-      key: 'title',
-      label: 'Tên Đề Tài',
-      sortable: true,
-    },
-    {
-      key: 'studentName',
-      label: 'Sinh Viên',
-      sortable: true,
-    },
-    {
-      key: 'assignedDate',
-      label: 'Ngày Nhận',
-      sortable: true,
-    },
-    {
-      key: 'myReview',
-      label: 'Review Của Tôi',
-      render: (value) => {
-        if (!value) return <span className="no-review">Chưa review</span>;
-        return (
-          <Badge variant={value === 'approve' ? 'success' : 'error'}>
-            {value === 'approve' ? '✅ Approve' : '❌ Reject'}
-          </Badge>
-        );
-      },
-    },
-    {
-      key: 'status',
-      label: 'Trạng Thái',
-      render: (value) => (
-        <Badge variant={getStatusVariant(value)}>
-          {getStatusText(value)}
-        </Badge>
-      ),
-    },
-    {
-      key: 'actions',
-      label: 'Thao Tác',
-      render: (_, row) => (
-        <div className="action-buttons">
-          <button
-            className="action-btn view-btn"
-            onClick={() => handleViewDetail(row)}
-          >
-            Xem
-          </button>
-          {!row.myReview && (
-            <button
-              className="action-btn review-btn"
-              onClick={() => handleOpenReview(row)}
-            >
-              Review
-            </button>
-          )}
-        </div>
-      ),
-    },
-  ];
+  const filtered = allTopics.filter(t => {
+    const matchStatus = statusFilter === 'ALL' || t.status === statusFilter;
+    const q = searchText.toLowerCase();
+    const matchSearch = !q ||
+      (t.titleVi || '').toLowerCase().includes(q) ||
+      (t.titleEn || '').toLowerCase().includes(q) ||
+      (t.code || '').toLowerCase().includes(q) ||
+      (t.department || '').toLowerCase().includes(q);
+    return matchStatus && matchSearch;
+  });
+
+  const getStatusBadge = (status) => {
+    const meta = STATUS_META[status] || { label: status || 'N/A', variant: 'default' };
+    return <Badge variant={meta.variant}>{meta.label}</Badge>;
+  };
+
+  const getDecisionBadge = (decision) => {
+    if (!decision) return <span className="na-text">Chờ chấm</span>;
+    if (decision === 'APPROVED') return <Badge variant="success">✓ APPROVED</Badge>;
+    return <Badge variant="error">✗ REJECTED</Badge>;
+  };
+
+  const passCount  = allTopics.filter(t => t.status === 'PASS' || t.status === 'FINALIZED' || t.status === 'APPROVED').length;
+  const failCount  = allTopics.filter(t => t.status === 'FAIL' || t.status === 'REJECTED').length;
+  const pendCount  = allTopics.filter(t => t.status === 'PENDING' || t.status === 'IN_REVIEW').length;
 
   return (
-    <div className="reviewer-theses">
+    <div className="reviewer-theses-page">
       <div className="page-header">
         <div>
-          <h1>Đề Tài Review</h1>
-          <p className="page-subtitle">Danh sách đề tài được phân công</p>
+          <h1>📚 Tra Cứu Tất Cả Đề Tài</h1>
+          <p className="page-subtitle">Xem toàn bộ đề tài trong học kỳ, tiến độ hội đồng phản biện</p>
         </div>
-        <div className="header-actions">
-          <Button variant="outline" size="md">
-            📊 Xuất báo cáo
-          </Button>
-        </div>
+        <Button variant="outline" onClick={fetchTopics} disabled={isLoading}>🔄 Làm mới</Button>
       </div>
 
+      {/* Summary chips */}
+      {!isLoading && (
+        <div className="summary-bar">
+          <div className="chip chip-total">📚 Tổng: <strong>{allTopics.length}</strong></div>
+          <div className="chip chip-success">✅ Đạt: <strong>{passCount}</strong></div>
+          <div className="chip chip-error">❌ Không đạt: <strong>{failCount}</strong></div>
+          <div className="chip chip-warning">⏳ Đang xét: <strong>{pendCount}</strong></div>
+        </div>
+      )}
+
+      {/* Filters */}
+      <Card style={{ marginBottom: 16 }}>
+        <div className="filter-row">
+          <div className="filter-group">
+            <label>📅 Học kỳ</label>
+            <select className="filter-select" value={selectedSemesterId} onChange={e => setSelectedSemesterId(e.target.value)}>
+              <option value="">-- Tất cả --</option>
+              {semesters.map(s => (
+                <option key={s.id} value={s.id}>{s.name || s.code}{s.isActive ? ' ✅' : ''}</option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-group">
+            <label>🔖 Trạng thái</label>
+            <select className="filter-select" value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+              <option value="ALL">Tất cả</option>
+              {Object.entries(STATUS_META).map(([k, v]) => (
+                <option key={k} value={k}>{v.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="filter-group search-group">
+            <label>🔍 Tìm kiếm</label>
+            <input
+              className="filter-input"
+              placeholder="Tên đề tài, mã, ngành..."
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+            />
+            {searchText && (
+              <button className="clear-btn" onClick={() => setSearchText('')}>✕</button>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      {/* Topic Table */}
       <Card>
-        <Table
-          columns={columns}
-          data={theses}
-          emptyMessage="Chưa có đề tài nào"
-        />
+        <div className="table-header-flex">
+          <h3>Danh sách đề tài</h3>
+          <span className="text-muted">{filtered.length} / {allTopics.length} đề tài</span>
+        </div>
+        <div className="topics-table-wrap">
+          <table className="topics-table">
+            <thead>
+              <tr>
+                <th>Mã ĐT</th>
+                <th>Tên Đề Tài</th>
+                <th>Ngành</th>
+                <th>GVHD</th>
+                <th>Trạng Thái</th>
+                <th>Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr><td colSpan="6" className="text-center">Đang tải dữ liệu...</td></tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="text-center text-muted">
+                    <div style={{ fontSize: 36, marginBottom: 8 }}>📭</div>
+                    Không tìm thấy đề tài nào.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map(topic => (
+                  <tr key={topic.id}>
+                    <td><span className="topic-code-cell">{topic.code || `ID-${topic.id}`}</span></td>
+                    <td>
+                      <div className="title-main">{topic.titleVi || topic.titleEn || 'N/A'}</div>
+                      {topic.titleVi && topic.titleEn && (
+                        <div className="title-sub">{topic.titleEn}</div>
+                      )}
+                    </td>
+                    <td><span className="dept-badge">{topic.department || 'N/A'}</span></td>
+                    <td className="supervisor-cell">
+                      {topic.supervisor?.fullName || <span className="na-text">N/A</span>}
+                    </td>
+                    <td>{getStatusBadge(topic.status)}</td>
+                    <td>
+                      <button className="action-btn view-btn" onClick={() => handleViewDetail(topic)}>
+                        🔍 Chi tiết
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       {/* Detail Modal */}
       <Modal
-        isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
-        title="Chi Tiết Đề Tài"
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        title={`🔍 Chi Tiết: ${selectedTopic?.code || ''}`}
         size="lg"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setIsDetailModalOpen(false)}>
-              Đóng
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => handleDownloadFile(selectedThesis)}
-            >
-              📥 Tải File
-            </Button>
-          </>
-        }
       >
-        {selectedThesis && (
-          <div className="thesis-detail">
-            <div className="detail-section">
-              <h4>Thông Tin Đề Tài</h4>
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <label>Mã đề tài:</label>
-                  <span>{selectedThesis.code}</span>
-                </div>
-                <div className="detail-item">
-                  <label>Sinh viên:</label>
-                  <span>{selectedThesis.studentName} ({selectedThesis.studentCode})</span>
-                </div>
-                <div className="detail-item">
-                  <label>Tiêu đề:</label>
-                  <p>{selectedThesis.title}</p>
-                </div>
-                <div className="detail-item">
-                  <label>File:</label>
-                  <span>📎 {selectedThesis.fileName}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="detail-section">
-              <h4>Trạng Thái Review</h4>
-              <div className="reviewers-status">
-                {selectedThesis.reviewers.map((reviewer, index) => (
-                  <div key={index} className="reviewer-status-item">
-                    <div className="reviewer-name">
-                      {reviewer.name}
-                      {reviewer.isMe && <span className="me-badge">Tôi</span>}
-                      {reviewer.isTieBreaker && <span className="tiebreaker-badge">Reviewer 3</span>}
-                    </div>
-                    <div className="reviewer-decision">
-                      {reviewer.decision === null ? (
-                        <Badge variant="default">Chưa review</Badge>
-                      ) : reviewer.decision === 'approve' ? (
-                        <Badge variant="success">✅ Approve</Badge>
-                      ) : (
-                        <Badge variant="error">❌ Reject</Badge>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {selectedThesis.needsTieBreaker && (
-                <div className="conflict-notice">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <line x1="12" y1="8" x2="12" y2="12" />
-                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
-                  <span>2 reviewers có ý kiến khác nhau. Cần reviewer thứ 3 để quyết định!</span>
-                </div>
-              )}
-              
-              {selectedThesis.result && (
-                <div className={`result-notice ${selectedThesis.result}`}>
-                  <strong>Kết quả cuối cùng:</strong> {selectedThesis.result === 'passed' ? '✅ PASSED' : '❌ FAILED'}
-                </div>
+        {selectedTopic && (
+          <div className="detail-view">
+            <div className="detail-meta">
+              <div className="detail-row"><span className="dl">Tên (VI)</span><span className="dv">{selectedTopic.titleVi || '—'}</span></div>
+              <div className="detail-row"><span className="dl">Tên (EN)</span><span className="dv">{selectedTopic.titleEn || '—'}</span></div>
+              <div className="detail-row"><span className="dl">Ngành</span><span className="dv">{selectedTopic.department || '—'}</span></div>
+              <div className="detail-row"><span className="dl">GVHD</span><span className="dv">{selectedTopic.supervisor?.fullName || '—'}</span></div>
+              <div className="detail-row"><span className="dl">Trạng thái</span><span className="dv">{getStatusBadge(selectedTopic.status)}</span></div>
+              {selectedTopic.aiSimilarityScore !== undefined && selectedTopic.aiSimilarityScore !== null && (
+                <div className="detail-row"><span className="dl">Điểm AI</span><span className="dv ai-score">{selectedTopic.aiSimilarityScore}%</span></div>
               )}
             </div>
-          </div>
-        )}
-      </Modal>
 
-      {/* Review Modal */}
-      <Modal
-        isOpen={isReviewModalOpen}
-        onClose={() => setIsReviewModalOpen(false)}
-        title="Review Đề Tài"
-        size="md"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setIsReviewModalOpen(false)}>
-              Hủy
-            </Button>
-            <Button variant="primary" onClick={handleSubmitReview}>
-              Gửi Review
-            </Button>
-          </>
-        }
-      >
-        {selectedThesis && (
-          <div className="review-form">
-            <div className="form-group">
-              <label>Đề tài:</label>
-              <p className="info-text">{selectedThesis.title}</p>
-            </div>
-
-            <div className="form-group">
-              <label>Quyết định: *</label>
-              <div className="decision-buttons">
-                <button
-                  className={`decision-btn approve ${reviewDecision === 'approve' ? 'selected' : ''}`}
-                  onClick={() => setReviewDecision('approve')}
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  <span>Approve</span>
-                  <p>Đề tài đạt yêu cầu</p>
-                </button>
-                <button
-                  className={`decision-btn reject ${reviewDecision === 'reject' ? 'selected' : ''}`}
-                  onClick={() => setReviewDecision('reject')}
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                  <span>Reject</span>
-                  <p>Đề tài chưa đạt</p>
-                </button>
+            {selectedTopic.description && (
+              <div className="detail-desc">
+                <span className="dl">Mô tả</span>
+                <p>{selectedTopic.description}</p>
               </div>
-            </div>
+            )}
 
-            <div className="form-group">
-              <label>Nhận xét:</label>
-              <textarea
-                className="review-textarea"
-                value={reviewComment}
-                onChange={(e) => setReviewComment(e.target.value)}
-                placeholder="Nhập nhận xét của bạn..."
-                rows="5"
-              />
-            </div>
-
-            <div className="review-info">
-              <p><strong>Lưu ý:</strong></p>
-              <ul>
-                <li>Nếu 2 reviewers cùng Approve → Đề tài PASS</li>
-                <li>Nếu 2 reviewers cùng Reject → Đề tài FAIL</li>
-                <li>Nếu 2 reviewers khác ý kiến → Thêm reviewer thứ 3</li>
-              </ul>
+            {/* Reviewer table */}
+            <div className="reviewers-section">
+              <h4 style={{ marginBottom: 12 }}>👥 Hội Đồng Phản Biện</h4>
+              {isReviewerLoading ? (
+                <p className="text-muted">Đang tải...</p>
+              ) : topicReviewers.length === 0 ? (
+                <p className="text-muted">Chưa có Reviewer nào được phân công.</p>
+              ) : (
+                <table className="mini-table">
+                  <thead>
+                    <tr><th>Thứ tự</th><th>Giảng Viên</th><th>Quyết Định</th><th>Điểm</th><th>Nhận Xét</th></tr>
+                  </thead>
+                  <tbody>
+                    {topicReviewers.map((rv, i) => {
+                      const orderCls = rv.reviewerOrder === 1 ? 'r1' : rv.reviewerOrder === 2 ? 'r2' : 'r3';
+                      return (
+                        <tr key={rv.id || i}>
+                          <td><span className={`order-badge ${orderCls}`}>R{rv.reviewerOrder || (i + 1)}</span></td>
+                          <td><strong>{rv.reviewer?.fullName || rv.reviewerName || 'N/A'}</strong></td>
+                          <td>{getDecisionBadge(rv.decision)}</td>
+                          <td>{rv.totalScore != null ? <span className="score-sm">{rv.totalScore}/10</span> : '—'}</td>
+                          <td className="comment-cell">{rv.comment || '—'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
         )}

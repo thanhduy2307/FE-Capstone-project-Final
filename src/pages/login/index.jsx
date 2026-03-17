@@ -10,13 +10,13 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isAuthenticated, isLoading, error, clearError } = useAuthStore();
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: false,
   });
-  
+
   const [formErrors, setFormErrors] = useState({});
 
   // Redirect if already authenticated
@@ -49,7 +49,7 @@ const Login = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
-    
+
     // Clear field error when user types
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: '' }));
@@ -58,48 +58,49 @@ const Login = () => {
 
   const validateForm = () => {
     const errors = {};
-    
+
     if (!formData.email.trim()) {
       errors.email = 'Email/Username is required';
     }
-    
+
     if (!formData.password) {
-      errors.password = 'Password is required';
+      errors.password = 'Password is required';     
     // } else if (formData.password.length < 6) {
     //   errors.password = 'Password must be at least 6 characters';
+
     }
-    
+
     return errors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate form
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
-    
+
     // Attempt login
     const result = await login({
       email: formData.email,
       password: formData.password,
     });
-    
+
     if (result.success) {
       let from = location.state?.from?.pathname;
       if (!from || from === '/login' || from === '/') {
-          // get fresh user from store
-          const userRole = useAuthStore.getState().user?.role;
-          switch (userRole) {
-            case 'ADMIN': from = '/admin'; break;
-            case 'LECTURER': from = '/lecturer'; break;
-            case 'MODERATOR': from = '/moderator'; break;
-            case 'STUDENT': from = '/student'; break;
-            default: from = '/home';
-          }
+        // get fresh user from store
+        const userRole = useAuthStore.getState().user?.role;
+        switch (userRole) {
+          case 'ADMIN': from = '/admin'; break;
+          case 'LECTURER': from = '/lecturer'; break;
+          case 'MODERATOR': from = '/moderator'; break;
+          case 'STUDENT': from = '/student'; break;
+          default: from = '/home';
+        }
       }
       navigate(from, { replace: true });
     }
@@ -112,7 +113,7 @@ const Login = () => {
         <div className="login-gradient-orb login-orb-2"></div>
         <div className="login-gradient-orb login-orb-3"></div>
       </div>
-      
+
       <div className="login-container">
         <Card className="login-card">
           <div className="login-header">
@@ -131,7 +132,7 @@ const Login = () => {
             <h1 className="login-title">Welcome Back</h1>
             <p className="login-subtitle">Sign in to your thesis portal account</p>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="login-form">
             {error && (
               <div className="login-error-banner">
@@ -143,7 +144,7 @@ const Login = () => {
                 <span>{error}</span>
               </div>
             )}
-            
+
             <Input
               type="text"
               name="email"
@@ -154,7 +155,7 @@ const Login = () => {
               error={formErrors.email}
               required
             />
-            
+
             <Input
               type="password"
               name="password"
@@ -165,7 +166,7 @@ const Login = () => {
               error={formErrors.password}
               required
             />
-            
+
             <div className="login-options">
               <label className="login-checkbox">
                 <input
@@ -176,10 +177,10 @@ const Login = () => {
                 />
                 <span>Remember me</span>
               </label>
-              
+
               <a href="#" className="login-forgot">Forgot password?</a>
             </div>
-            
+
             <Button
               type="submit"
               variant="primary"
@@ -190,7 +191,7 @@ const Login = () => {
               Sign In
             </Button>
           </form>
-          
+
           <div className="login-footer">
             <p>Don't have an account? <a href="#">Contact admin</a></p>
           </div>
