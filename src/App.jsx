@@ -16,6 +16,8 @@ import LecturerLayout from './components/LecturerLayout.jsx';
 import LecturerTheses from './pages/lecturer-theses/index.jsx';
 import LecturerReviews from './pages/lecturer-reviews/index.jsx';
 import LecturerHistory from './pages/lecturer-history/index.jsx';
+import ReviewerDashboard from './pages/reviewer-dashboard/index.jsx';
+import ReviewerTheses from './pages/reviewer-theses/index.jsx';
 
 import ModeratorLayout from './components/ModeratorLayout.jsx';
 import ModeratorTheses from './pages/moderator-theses/index.jsx';
@@ -64,8 +66,10 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="theses" replace />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<ReviewerDashboard />} />
           <Route path="theses" element={<LecturerTheses />} />
+          <Route path="all-theses" element={<ReviewerTheses />} />
           <Route path="reviews" element={<LecturerReviews />} />
           <Route path="history" element={<LecturerHistory />} />
         </Route>

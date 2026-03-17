@@ -1,6 +1,5 @@
-.reviewer-theses {
-    width: 100%;
-}
+.reviewer-theses-page { padding: 0; }
+.reviewer-theses { width: 100%; }
 
 .page-header {
     display: flex;
