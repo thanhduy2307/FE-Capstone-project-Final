@@ -1,0 +1,32 @@
+.layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.layout-main {
+    flex: 1;
+    padding: var(--spacing-2xl) var(--spacing-xl);
+    max-width: var(--max-w-6xl);
+    margin: 0 auto;
+    width: 100%;
+}
+
+.layout-footer {
+    padding: var(--spacing-xl);
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.layout-footer p {
+    color: var(--text-tertiary);
+    font-size: var(--font-size-sm);
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .layout-main {
+        padding: var(--spacing-xl) var(--spacing-md);
+    }
+}

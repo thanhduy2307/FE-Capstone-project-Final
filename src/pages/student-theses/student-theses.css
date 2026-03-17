@@ -1,0 +1,53 @@
+.student-theses {
+    width: 100%;
+}
+
+.page-header {
+    margin-bottom: var(--spacing-2xl);
+}
+
+.page-header h1 {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-secondary);
+}
+
+.registration-select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: #2d3436; /* Explicit dark background */
+    color: #ffffff; /* Explicit white text */
+    margin-top: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: border-color 0.2s;
+    color-scheme: dark; /* Hint to browser for dark theme */
+}
+
+.registration-select:focus {
+    border-color: #6c5ce7;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(108, 92, 231, 0.2);
+}
+
+/* Hard reset for native options to ensure contrast */
+.registration-select option {
+    background-color: #2d3436 !important;
+    color: #ffffff !important;
+    padding: 10px;
+}
