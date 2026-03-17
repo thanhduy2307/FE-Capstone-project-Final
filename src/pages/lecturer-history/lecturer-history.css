@@ -1,64 +1,97 @@
 .lecturer-history {
-  padding: 24px;
+  padding: 0;
 }
 
-.lecturer-history .history-table-container {
-  overflow-x: auto;
-}
-
-.lecturer-history .history-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-}
-
-.lecturer-history .history-table th,
-.lecturer-history .history-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--border-color, #eaeaea);
-}
-
-.lecturer-history .history-table th {
-  background-color: var(--bg-hover, #f8f9fa);
-  font-weight: 600;
-  color: var(--text-primary, #333);
-}
-
-.lecturer-history .history-table tr:hover {
-  background-color: var(--bg-hover, #f8f9fa);
-}
-
-.lecturer-history .table-header-flex {
+.page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
+  align-items: flex-start;
+  margin-bottom: 20px;
 }
 
-.lecturer-history .score-badge {
-  font-weight: 600;
-  padding: 4px 8px;
-  border-radius: 4px;
+.page-header h1 { font-size: 26px; font-weight: 700; margin: 0 0 4px; }
+.page-subtitle { color: #888; font-size: 14px; margin: 0; }
+
+/* Stats grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
-.lecturer-history .score-badge.high {
-  background-color: rgba(46, 204, 113, 0.1);
-  color: #27ae60;
+.stat-card {
+  padding: 20px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  text-align: center;
+}
+.stat-card .stat-num { font-size: 32px; font-weight: 800; color: #a29bfe; }
+.stat-card .stat-label { font-size: 12px; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.stat-card.approved .stat-num { color: #00b894; }
+.stat-card.rejected .stat-num { color: #e17055; }
+.stat-card.score    .stat-num { color: #fdcb6e; }
+
+/* Table */
+.history-table-container { overflow-x: auto; }
+
+.history-table {
+  width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;
 }
 
-.lecturer-history .score-badge.medium {
-  background-color: rgba(241, 196, 15, 0.1);
-  color: #f39c12;
+.history-table th {
+  padding: 12px 14px; font-weight: 600;
+  border-bottom: 2px solid rgba(255,255,255,0.08);
+  color: #aaa; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em;
 }
 
-.lecturer-history .score-badge.low {
-  background-color: rgba(231, 76, 60, 0.1);
-  color: #c0392b;
+.history-table td {
+  padding: 14px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  vertical-align: middle;
 }
 
-.lecturer-history .comment-cell {
-  max-width: 300px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.history-table tr:hover td { background: rgba(255,255,255,0.025); }
+.history-table tr.row-expanded td { background: rgba(108,92,231,0.06); }
+
+/* TableHeader utility */
+.table-header-flex {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 16px;
+}
+.text-muted { color: #888; font-size: 13px; }
+.text-center { text-align: center; }
+.py-4 { padding: 32px; }
+
+/* Title cell */
+.title-cell .title-en { font-size: 12px; color: #888; margin-top: 2px; }
+
+/* Order badge */
+.order-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  font-size: 11px; font-weight: 700;
+}
+.order-badge.r1 { background: rgba(108,92,231,0.15); color: #6c5ce7; }
+.order-badge.r2 { background: rgba(0,184,148,0.15);  color: #00b894; }
+.order-badge.r3 { background: rgba(225,112,85,0.15); color: #e17055; }
+
+/* Score badge */
+.score-badge {
+  display: inline-block; font-weight: 700;
+  padding: 4px 10px; border-radius: 8px; font-size: 13px;
+}
+.score-badge.high   { background: rgba(0,184,148,0.12); color: #00b894; }
+.score-badge.medium { background: rgba(253,203,110,0.12); color: #fdcb6e; }
+.score-badge.low    { background: rgba(225,112,85,0.12); color: #e17055; }
+
+/* Comment cell */
+.comment-cell {
+  max-width: 220px; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; color: #aaa;
+}
+.no-comment { color: #555; }
+
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
