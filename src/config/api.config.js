@@ -46,6 +46,7 @@ export const API_ENDPOINTS = {
     BY_SEMESTER: (semesterId) => `/api/topics/semester/${semesterId}`,
     BY_SEMESTER_PASSED: (semesterId) => `/api/topics/semester/${semesterId}/passed`,
     BY_STATUS: (status) => `/api/topics/status/${status}`,
+    BY_SUBMITTER: (submitterId) => `/api/topics/submitter/${submitterId}`,
   },
 
   // Registration Phase endpoints

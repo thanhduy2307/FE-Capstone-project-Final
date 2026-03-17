@@ -154,6 +154,20 @@ const thesisService = {
         }
     },
 
+    /**
+     * Get topics by submitter
+     * @param {number|string} submitterId
+     * @returns {Promise} List of topics submitted by the given submitterId
+     */
+    async getTopicsBySubmitter(submitterId) {
+        try {
+            const response = await axiosInstance.get(API_ENDPOINTS.THESIS.BY_SUBMITTER(submitterId));
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
+
     // The previous approveThesis/rejectThesis were placeholders, we now use update API endpoints.
     // i.e `PUT /api/topics/{id}`
 };
